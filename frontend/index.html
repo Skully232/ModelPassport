@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModelPassport</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>ModelPassport</h1>
+        <p>Pre-deployment AI Bias Certification Platform</p>
+    </header>
+
+    <main>
+        <section id="upload-section">
+            <h2>Upload Artifacts</h2>
+            <input type="file" id="model-upload" placeholder="Upload Model" />
+            <input type="file" id="data-upload" placeholder="Upload Dataset" />
+            <button id="run-audit-btn">Run Audit</button>
+        </section>
+
+        <section id="results-section">
+            <div id="data-forensics-result" class="result-card">
+                <h3>Data Forensics</h3>
+                <p>Awaiting audit...</p>
+            </div>
+            <div id="stress-test-result" class="result-card">
+                <h3>Stress Test</h3>
+                <p>Awaiting audit...</p>
+            </div>
+            <div id="fairness-metrics-result" class="result-card">
+                <h3>Fairness Metrics</h3>
+                <p>Awaiting audit...</p>
+            </div>
+            <div id="gemini-governance-result" class="result-card">
+                <h3>Gemini Governance</h3>
+                <p>Awaiting audit...</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
