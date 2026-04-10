@@ -1,10 +1,16 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pandas
 scikit-learn
 fairlearn
 google-generativeai
 python-dotenv
+pydantic-settings
 numpy
 joblib
 scipy
+python-multipart
+aiofiles
+reportlab
+qrcode[pil]
+Pillow
