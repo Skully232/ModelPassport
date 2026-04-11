@@ -82,7 +82,7 @@ class StressTestEngine:
                 
         return pd.DataFrame(synthetic_data)
 
-    def run_stress_test(self, num_samples: int = 1000) -> Dict[str, Any]:
+    def run(self, num_samples: int = 1000) -> Dict[str, Any]:
         """
         Executes the stress test workflow framework:
         - Scaffolds synthetic twin profile groups.
