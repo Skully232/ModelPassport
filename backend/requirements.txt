@@ -8,7 +8,7 @@ python-dotenv
 pydantic-settings
 numpy
 joblib
-scipy
+scipy>=1.17.0
 python-multipart
 aiofiles
 reportlab

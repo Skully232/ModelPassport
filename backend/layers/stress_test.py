@@ -1,258 +1,205 @@
-import pandas as pd
 import numpy as np
-from sklearn.base import BaseEstimator
-from typing import Optional
-import logging
+import pandas as pd
+from typing import Dict, Any, List, Optional
 
-logger = logging.getLogger(__name__)
 
 class StressTestEngine:
     """
-    Layer 2: Synthetic Stress Test Engine
-    
-    The 'crash test' for AI models. Generates synthetic twin profiles
-    that are identical in every way except for one protected attribute,
-    then measures whether the model treats them differently.
-    
-    This detects discrimination that real-world data analysis misses
-    because it isolates the protected attribute as the ONLY variable.
-    
-    Example finding: "Female applicants with identical qualifications 
-    to male applicants are rejected 2.4x more often."
+    StressTestEngine generates synthetic twin profiles based on real dataset statistics
+    to stress test specific machine learning models for bias and fairness.
+    It focuses on ensuring counterfactual fairness through twin profile evaluation
+    and calculating disparate impact ratios based on the 80% rule.
     """
-    
+
     def __init__(
         self, 
-        model: BaseEstimator,
-        df: pd.DataFrame,
-        protected_attributes: list[str],
-        target_column: str,
-        n_synthetic_pairs: int = 1000
+        model: Any, 
+        dataset: pd.DataFrame, 
+        protected_attributes: List[str], 
+        target_column: Optional[str] = None,
+        positive_outcome: Any = 1
     ):
+        """
+        Initializes the Stress Test Engine.
+
+        Args:
+            model: A trained sklearn-compatible model with a .predict() method.
+            dataset: A pandas DataFrame containing reference real data.
+                     Used to calculate statistics to formulate synthetic twins.
+            protected_attributes: List of columns representing protected attributes (e.g., 'Age', 'Gender').
+            target_column: Optional name of the target/label column to exclude from profile generation.
+            positive_outcome: The value in the model output that signifies a positive/favorable outcome.
+        """
         self.model = model
-        self.df = df
-        self.protected_attributes = protected_attributes
-        self.target_column = target_column
-        self.n_synthetic_pairs = n_synthetic_pairs
-        self.results = {}
-    
-    def run(self) -> dict:
-        """
-        Runs stress tests for all protected attributes.
-        Returns combined results with bias scores and counterfactuals.
-        """
-        logger.info(f"Starting Stress Test with {self.n_synthetic_pairs} synthetic pairs...")
+        self.dataset = dataset.copy()
         
-        stress_results = {}
-        all_warnings = []
-        overall_passed = True
+        # Drop the target column if provided, to ensure we only process feature variables
+        if target_column and target_column in self.dataset.columns:
+            self.dataset = self.dataset.drop(columns=[target_column])
+            
+        self.protected_attributes = protected_attributes
+        self.positive_outcome = positive_outcome
+
+        # Verify all protected attributes exist in the feature set dataframe
+        missing = [attr for attr in self.protected_attributes if attr not in self.dataset.columns]
+        if missing:
+            raise ValueError(f"Protected attributes not found in dataset: {missing}")
+
+    def _generate_synthetic_base(self, num_samples: int) -> pd.DataFrame:
+        """
+        Generates base synthetic profiles using the statistical distribution of the original dataset.
+        Protected attributes are NOT generated here; they are injected later to form specific twins.
+        """
+        synthetic_data = {}
+        for col in self.dataset.columns:
+            if col in self.protected_attributes:
+                continue
+                
+            col_data = self.dataset[col].dropna()
+            if len(col_data) == 0:
+                synthetic_data[col] = np.zeros(num_samples)
+                continue
+                
+            if pd.api.types.is_numeric_dtype(col_data):
+                mean = col_data.mean()
+                std = col_data.std()
+                if std == 0 or pd.isna(std):
+                     vals = np.full(num_samples, mean)
+                else:
+                    # Generate normal distribution mapped around mean and bounded by min/max
+                    vals = np.random.normal(loc=mean, scale=std, size=num_samples)
+                    vals = np.clip(vals, col_data.min(), col_data.max())
+                
+                # Maintain data type context natively (e.g. integer fields generate integer profiles)
+                if pd.api.types.is_integer_dtype(col_data):
+                    vals = np.round(vals).astype(int)
+                synthetic_data[col] = vals
+            else:
+                # Random sampling based on native dataset frequencies for categorical features
+                value_counts = col_data.value_counts(normalize=True)
+                vals = np.random.choice(value_counts.index, p=value_counts.values, size=num_samples)
+                synthetic_data[col] = vals
+                
+        return pd.DataFrame(synthetic_data)
+
+    def run_stress_test(self, num_samples: int = 1000) -> Dict[str, Any]:
+        """
+        Executes the stress test workflow framework:
+        - Scaffolds synthetic twin profile groups.
+        - Isolates variations to solely protected attributes.
+        - Models outputs and benchmarks the inference divergences.
+        - Computes the 80% (Four-Fifths) Disparate Impact rule compliance.
+
+        Args:
+            num_samples: Number of synthetic structural profiles to generate.
+            
+        Returns:
+            A structured dict tracking metrics, sub-status checks, and generated warnings.
+        """
+        results = {
+            "status": "Pass",
+            "overall_warnings": [],
+            "protected_attributes": {}
+        }
+        
+        # 1. Spawn core structural profiles independent of protective classes
+        base_profiles = self._generate_synthetic_base(num_samples)
+        expected_columns = self.dataset.columns.tolist() 
         
         for attr in self.protected_attributes:
-            if attr not in self.df.columns:
-                continue
-            result = self._test_attribute(attr)
-            stress_results[attr] = result
-            all_warnings.extend(result.get("warnings", []))
-            if not result.get("passed", True):
-                overall_passed = False
-        
-        bias_score = self._calculate_bias_score(stress_results)
-        
-        self.results = {
-            "layer": "stress_test",
-            "synthetic_pairs_tested": self.n_synthetic_pairs,
-            "attribute_results": stress_results,
-            "bias_score": bias_score,
-            "warnings": all_warnings,
-            "status": "pass" if bias_score >= 70 else "fail",
-            "overall_passed": overall_passed
-        }
-        
-        logger.info(f"Stress Test complete. Bias score: {bias_score}")
-        return self.results
-    
-    def _test_attribute(self, protected_attr: str) -> dict:
-        """
-        For a single protected attribute:
-        1. Gets all unique group values (e.g. Male/Female)
-        2. Generates n synthetic profiles using real data statistics
-        3. Creates twin pairs - identical except protected attribute differs
-        4. Runs both twins through the model
-        5. Measures outcome divergence between twins
-        
-        Returns per-group outcome rates and discrimination ratio.
-        """
-        groups = self.df[protected_attr].dropna().unique()
-        
-        if len(groups) < 2:
-            return {"error": f"Need at least 2 groups in '{protected_attr}', found {len(groups)}"}
-        
-        feature_cols = [c for c in self.df.columns 
-                       if c != self.target_column and c != protected_attr]
-        
-        # Generate synthetic base profiles from real data statistics
-        synthetic_profiles = self._generate_synthetic_profiles(feature_cols)
-        
-        group_outcomes = {}
-        
-        for group in groups:
-            twins = synthetic_profiles.copy()
-            twins[protected_attr] = group
-            
-            try:
-                all_cols = feature_cols + [protected_attr]
-                twins_input = twins[all_cols] if all(c in twins.columns for c in all_cols) else twins
-                
-                # Encode categoricals for model
-                twins_encoded = self._encode_for_prediction(twins_input)
-                predictions = self.model.predict(twins_encoded)
-                
-                positive_rate = float(np.mean(predictions == 1))
-                group_outcomes[str(group)] = {
-                    "positive_outcome_rate": round(positive_rate * 100, 2),
-                    "n_tested": len(predictions)
+            unique_values = self.dataset[attr].dropna().unique()
+            if len(unique_values) < 2:
+                results["protected_attributes"][attr] = {
+                    "error": "Insufficient unique attribute variations to generate counterfactual twins."
                 }
-            except Exception as e:
-                logger.warning(f"Prediction failed for group {group}: {e}")
-                group_outcomes[str(group)] = {"error": str(e)}
-        
-        discrimination_ratio = self._calculate_discrimination_ratio(group_outcomes)
-        warnings = self._generate_attribute_warnings(protected_attr, group_outcomes, discrimination_ratio)
-        
-        return {
-            "group_outcomes": group_outcomes,
-            "discrimination_ratio": discrimination_ratio,
-            "disparate_impact": round(discrimination_ratio, 3),
-            "passed": discrimination_ratio >= 0.8,
-            "warnings": warnings
-        }
-    
-    def _generate_synthetic_profiles(self, feature_cols: list) -> pd.DataFrame:
-        """
-        Generates synthetic profiles by sampling from real data distributions.
-        For numeric columns: samples from normal distribution using real mean/std.
-        For categorical columns: samples proportionally from real value frequencies.
-        
-        This ensures synthetic data is realistic, not random noise.
-        """
-        synthetic = {}
-        
-        available_cols = [c for c in feature_cols if c in self.df.columns]
-        
-        for col in available_cols:
-            col_data = self.df[col].dropna()
-            
-            if len(col_data) == 0:
-                synthetic[col] = [0] * self.n_synthetic_pairs
                 continue
+
+            attr_results = {
+                "values": [
+                    int(v) if isinstance(v, (np.integer, int)) else float(v) if isinstance(v, (np.floating, float)) else str(v)
+                    for v in unique_values
+                ],
+                "positive_rates": {},
+                "disparate_impact_ratios": {},
+                "flipping_rate": 0.0,
+                "warnings": []
+            }
             
-            if self.df[col].dtype in ['int64', 'float64'] and self.df[col].nunique() > 10:
-                # Numeric: sample from normal distribution
-                mean = float(col_data.mean())
-                std = float(col_data.std()) if float(col_data.std()) > 0 else 1.0
-                sampled = np.random.normal(mean, std, self.n_synthetic_pairs)
-                # Clip to real data range
-                sampled = np.clip(sampled, float(col_data.min()), float(col_data.max()))
-                synthetic[col] = sampled
-            else:
-                # Categorical: sample proportionally
-                value_probs = col_data.value_counts(normalize=True)
-                synthetic[col] = np.random.choice(
-                    value_probs.index,
-                    size=self.n_synthetic_pairs,
-                    p=value_probs.values
-                )
-        
-        return pd.DataFrame(synthetic)
-    
-    def _encode_for_prediction(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Label encodes categorical columns so sklearn models can process them.
-        Numeric columns pass through unchanged.
-        """
-        encoded = df.copy()
-        for col in encoded.columns:
-            if encoded[col].dtype == 'object':
-                encoded[col] = pd.factorize(encoded[col])[0]
-        return encoded.fillna(0)
-    
-    def _calculate_discrimination_ratio(self, group_outcomes: dict) -> float:
-        """
-        Calculates the disparate impact ratio.
-        Formula: lowest group positive rate / highest group positive rate
-        
-        The 80% rule (0.8 threshold) is the legal standard used by the
-        US Equal Employment Opportunity Commission (EEOC).
-        A ratio below 0.8 indicates illegal disparate impact discrimination.
-        
-        Returns float between 0 and 1. Below 0.8 = fails the 80% rule.
-        """
-        rates = []
-        for group, data in group_outcomes.items():
-            if "positive_outcome_rate" in data:
-                rates.append(data["positive_outcome_rate"])
-        
-        if len(rates) < 2:
-            return 1.0
-        
-        min_rate = min(rates)
-        max_rate = max(rates)
-        
-        if max_rate == 0:
-            return 1.0
-        
-        return round(min_rate / max_rate, 3)
-    
-    def _calculate_bias_score(self, stress_results: dict) -> int:
-        """
-        Overall bias score 0-100 based on discrimination ratios across all attributes.
-        Score of 100 = perfectly unbiased across all tested attributes.
-        Score below 70 = fails certification.
-        """
-        if not stress_results:
-            return 100
-        
-        score = 100
-        
-        for attr, result in stress_results.items():
-            if "discrimination_ratio" in result:
-                ratio = result["discrimination_ratio"]
-                if ratio < 0.5:
-                    score -= 30
-                elif ratio < 0.8:
-                    score -= 20
-                elif ratio < 0.9:
-                    score -= 10
-        
-        return max(0, min(100, score))
-    
-    def _generate_attribute_warnings(
-        self, 
-        attr: str, 
-        group_outcomes: dict, 
-        discrimination_ratio: float
-    ) -> list:
-        """
-        Generates human-readable warnings for a specific protected attribute.
-        Includes the specific groups affected and the magnitude of discrimination.
-        """
-        warnings = []
-        
-        if discrimination_ratio < 0.8:
-            rates = {g: d["positive_outcome_rate"] 
-                    for g, d in group_outcomes.items() 
-                    if "positive_outcome_rate" in d}
+            predictions_by_value = {}
             
-            if rates:
-                best_group = max(rates, key=rates.get)
-                worst_group = min(rates, key=rates.get)
+            # 2. Generate systematic comparative twins and evaluate metrics footprint
+            for val in unique_values:
+                twin_df = base_profiles.copy()
+                twin_df[attr] = val
                 
-                warnings.append(
-                    f"DISCRIMINATION DETECTED in '{attr}': '{worst_group}' group receives "
-                    f"positive outcomes {round(rates[best_group]/rates[worst_group], 1)}x less "
-                    f"often than '{best_group}' group "
-                    f"({rates[worst_group]}% vs {rates[best_group]}%) — "
-                    f"Fails the 80% rule (ratio: {discrimination_ratio})"
+                # Overwrite orthogonal protective attributes cleanly with their primary modes
+                for other_attr in self.protected_attributes:
+                    if other_attr != attr:
+                        mode_val = self.dataset[other_attr].mode()[0]
+                        twin_df[other_attr] = mode_val
+                        
+                # Preserve precise dataset layout architecture for model predict boundaries
+                twin_df = twin_df[expected_columns]
+                
+                # Perform native inference request
+                preds = self.model.predict(twin_df)
+                predictions_by_value[val] = preds
+                
+                # Audit and register predicted selection rate for specific demographic
+                positive_rate = np.mean(preds == self.positive_outcome)
+                attr_results["positive_rates"][str(val)] = float(positive_rate)
+            
+            # 3. Assess Counterfactual Flipping Event Rate
+            # Represents the % of twins whose prediction result flipped strictly off demographic shift
+            preds_matrix = np.column_stack(list(predictions_by_value.values()))
+            flips = np.std(preds_matrix, axis=1) > 0
+            attr_results["flipping_rate"] = float(np.mean(flips))
+            
+            if attr_results["flipping_rate"] > 0.05:
+                warning_msg = (
+                    f"Counterfactual vulnerability detected on '{attr}': "
+                    f"{attr_results['flipping_rate'] * 100:.1f}% of evaluated profiles reversed outcomes "
+                    f"solely due to a shift in this protected attribute."
                 )
-        
-        return warnings
+                attr_results["warnings"].append(warning_msg)
+                results["overall_warnings"].append(warning_msg)
+
+            # 4. Enforce strict 80% Disparate Impact (Four-Fifths) rule mappings
+            pos_rates = list(attr_results["positive_rates"].values())
+            max_rate = max(pos_rates)
+            min_rate = min(pos_rates)
+            
+            if max_rate > 0:
+                di_ratio = min_rate / max_rate
+                attr_results["disparate_impact_ratio_min_max"] = float(di_ratio)
+                
+                if di_ratio < 0.8:
+                    warning_msg = (
+                        f"Four-Fifths (80%) Rule violation on '{attr}'. "
+                        f"Disparate impact ratio is {di_ratio:.3f} (< 0.8), "
+                        f"indicating a significantly disadvantaged unprivileged sub-cohort."
+                    )
+                    attr_results["warnings"].append(warning_msg)
+                    results["overall_warnings"].append(warning_msg)
+            else:
+                attr_results["disparate_impact_ratio_min_max"] = 0.0
+                warning_msg = f"Zero absolute favorable outcomes aggregated across all classes for '{attr}'."
+                attr_results["warnings"].append(warning_msg)
+
+            # Analyze deep pairwise comparative distributions against inferred favored demographic
+            sorted_rates = sorted(attr_results["positive_rates"].items(), key=lambda x: x[1], reverse=True)
+            if len(sorted_rates) > 0:
+                privileged_val, priv_rate = sorted_rates[0]
+                attr_results["inferred_privileged_group"] = privileged_val
+                
+                for group, pop_rate in sorted_rates[1:]:
+                    ratio = pop_rate / priv_rate if priv_rate > 0 else 0.0
+                    attr_results["disparate_impact_ratios"][f"{group}_vs_{privileged_val}"] = float(ratio)
+                    
+            results["protected_attributes"][attr] = attr_results
+
+        # Aggregate pass/fail flags if platform constraints breach boundaries
+        if len(results["overall_warnings"]) > 0:
+            results["status"] = "Fail"
+            
+        return results

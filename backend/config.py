@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     ENVIRONMENT: str = "development"
 
-    # Google AI
-    GEMINI_API_KEY: str
+    # Google AI (empty until set in .env; required when calling Gemini-backed features)
+    GEMINI_API_KEY: str = ""
     GOOGLE_CLOUD_PROJECT: str = ""
 
     # Certificate
