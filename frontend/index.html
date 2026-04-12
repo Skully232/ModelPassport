@@ -1,45 +1,1135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ModelPassport</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModelPassport — AI Bias Certification</title>
+  <meta name="description" content="Pre-deployment AI bias certification for government systems. ModelPassport's 4-layer audit pipeline detects bias before deployment." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Design Tokens ─────────────────────────────── */
+    :root {
+      --navy:        #0A1628;
+      --navy-light:  #0D1F3C;
+      --navy-card:   #0F2040;
+      --blue:        #0066FF;
+      --blue-glow:   rgba(0,102,255,0.22);
+      --blue-soft:   rgba(0,102,255,0.08);
+      --blue-light:  #3385FF;
+      --gold:        #FFB800;
+      --gold-glow:   rgba(255,184,0,0.18);
+      --gold-soft:   rgba(255,184,0,0.07);
+      --success:     #00C48C;
+      --success-bg:  rgba(0,196,140,0.08);
+      --fail:        #FF4444;
+      --fail-bg:     rgba(255,68,68,0.08);
+      --text:        #E8EDF5;
+      --text-muted:  #7A8BA8;
+      --border:      rgba(255,255,255,0.07);
+      --r-sm:        8px;
+      --r:           14px;
+      --r-lg:        20px;
+      --ease:        0.25s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ─── Reset ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    ::selection { background: var(--blue); color: #fff; }
+
+    /* ─── Background mesh ───────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%,  rgba(0,102,255,.09)   0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255,184,0,.05)   0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,.013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    /* ─── Layout ─────────────────────────────────────── */
+    .wrap     { max-width: 880px;  margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    .card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      backdrop-filter: blur(10px);
+    }
+    .card--blue {
+      border-color: var(--blue);
+      box-shadow: 0 0 44px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    /* ─── HERO ───────────────────────────────────────── */
+    .hero {
+      padding: 84px 0 68px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero__pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,102,255,.1);
+      border: 1px solid rgba(0,102,255,.28);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+      margin-bottom: 28px;
+    }
+
+    .hero__pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.4; transform:scale(.75); }
+    }
+
+    .hero__logo {
+      font-size: clamp(42px, 7vw, 70px);
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: -.03em;
+      line-height: 1;
+      margin-bottom: 16px;
+      text-shadow: 0 0 70px var(--gold-glow);
+    }
+    .hero__logo span { color: var(--text); opacity: .65; }
+
+    .hero__tagline {
+      font-size: clamp(17px, 2.8vw, 25px);
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-bottom: 12px;
+    }
+    .hero__sub {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .hero__chips {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 36px;
+    }
+    .hero__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 7px 15px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .hero__chip-n { font-size: 10px; font-weight: 800; color: var(--blue-light); }
+
+    /* ─── FORM ───────────────────────────────────────── */
+    .form-section { padding-bottom: 80px; }
+
+    .section-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-eyebrow::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .fcol2 { grid-column: 1 / -1; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .field input, .field select {
+      background: rgba(255,255,255,.038);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: var(--r-sm);
+      padding: 12px 15px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      transition: border-color var(--ease), box-shadow var(--ease);
+      outline: none;
+      width: 100%;
+    }
+    .field input::placeholder { color: rgba(255,255,255,.18); }
+    .field input:focus, .field select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-glow);
+    }
+    .field select {
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%237A8BA8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+    }
+    .field select option { background: var(--navy-card); color: var(--text); }
+
+    /* File upload */
+    .uploader {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,.032);
+      border: 1px dashed rgba(255,255,255,.13);
+      border-radius: var(--r-sm);
+      padding: 15px 16px;
+      cursor: pointer;
+      transition: border-color var(--ease), background var(--ease);
+    }
+    .uploader:hover { border-color: var(--blue); background: var(--blue-soft); }
+    .uploader input[type="file"] { display: none; }
+    .uploader__icon {
+      width: 36px; height: 36px;
+      background: rgba(0,102,255,.12);
+      border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .uploader__main { display: flex; flex-direction: column; gap: 3px; }
+    .uploader__title  { font-size: 14px; font-weight: 600; color: var(--text); }
+    .uploader__hint   { font-size: 12px; color: var(--text-muted); }
+    .uploader__chosen { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--success); font-weight: 600; }
+
+    /* Error band */
+    .form-err {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--fail-bg);
+      border: 1px solid rgba(255,68,68,.28);
+      border-radius: var(--r-sm);
+      padding: 13px 15px;
+      font-size: 14px;
+      color: var(--fail);
+      font-weight: 500;
+      margin-top: 14px;
+    }
+    .form-err.on { display: flex; }
+
+    /* Submit */
+    .btn-run {
+      width: 100%;
+      margin-top: 8px;
+      padding: 16px;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--r-sm);
+      color: #000;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+    }
+    .btn-run::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 55%);
+    }
+    .btn-run:hover  { background:#ffc527; transform:translateY(-1px); box-shadow:0 8px 30px var(--gold-glow); }
+    .btn-run:active { transform:none; }
+
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+
+    /* ─── LOADING OVERLAY ────────────────────────────── */
+    #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,22,40,.97);
+      backdrop-filter: blur(10px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      z-index: 9999;
+    }
+    #overlay.on { display: flex; }
+
+    .ov-brand {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: -.02em;
+      margin-bottom: -14px;
+    }
+
+    .spinner {
+      width: 76px; height: 76px;
+    }
+    .spinner svg {
+      width: 76px; height: 76px;
+      animation: spin 1.15s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spin-track { fill:none; stroke:rgba(0,102,255,.14); stroke-width:3.5; }
+    .spin-arc   {
+      fill:none; stroke:var(--blue); stroke-width:3.5;
+      stroke-linecap:round;
+      stroke-dasharray:176; stroke-dashoffset:44;
+      filter:drop-shadow(0 0 7px var(--blue));
+    }
+
+    #ovMsg {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: opacity .35s;
+    }
+
+    .ov-dots { display:flex; gap:8px; }
+    .ov-dot  { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.1); transition:background .35s; }
+    .ov-dot.on { background:var(--blue); box-shadow:0 0 8px var(--blue); }
+
+    /* ─── RESULTS ─────────────────────────────────────── */
+    #results {
+      display: none;
+      padding-bottom: 90px;
+      animation: slideUp .55s ease both;
+    }
+    #results.on { display: block; }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(22px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* Badge */
+    .badge-wrap { text-align:center; margin-bottom: 48px; }
+    .cert-badge {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 26px 56px;
+      border-radius: var(--r-lg);
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+    }
+    .cert-badge::before {
+      content:'';
+      position:absolute; inset:0;
+      opacity:.07;
+      background: radial-gradient(ellipse at center, currentColor 0%, transparent 70%);
+    }
+    .cert-badge--ok   { border-color:var(--success); color:var(--success); }
+    .cert-badge--cond { border-color:var(--gold);    color:var(--gold);    }
+    .cert-badge--no   { border-color:var(--fail);    color:var(--fail);    }
+
+    .cert-badge__ico   { font-size:34px; line-height:1; }
+    .cert-badge__title {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .cert-badge__id {
+      font-family:'JetBrains Mono', monospace;
+      font-size:13px;
+      opacity:.6;
+      font-weight:500;
+      margin-top:3px;
+    }
+
+    /* Score + layers */
+    .score-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+      align-items: start;
+    }
+
+    .ring-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px 20px;
+      text-align: center;
+    }
+    .ring-card__lbl { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); }
+
+    .ring-wrap { position:relative; width:136px; height:136px; }
+    .ring-wrap svg { width:136px; height:136px; transform:rotate(-90deg); }
+    .ring-track { fill:none; stroke:rgba(255,255,255,.055); stroke-width:8; }
+    .ring-fill  { fill:none; stroke-width:8; stroke-linecap:round; stroke-dasharray:339; stroke-dashoffset:339; transition:stroke-dashoffset 1.55s cubic-bezier(.4,0,.2,1), stroke .4s; filter:drop-shadow(0 0 6px currentColor); }
+    .ring-val   { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+    .ring-num   { font-size:34px; font-weight:900; line-height:1; letter-spacing:-.02em; }
+    .ring-sub   { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); }
+
+    /* Layer cards */
+    .layers { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .lcard {
+      padding: 18px;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+      transition: border-color var(--ease), transform var(--ease);
+    }
+    .lcard:hover { border-color:rgba(255,255,255,.11); transform:translateY(-2px); }
+    .lcard__head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .lcard__name { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--text-muted); }
+    .lcard__tag  { font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px; border-radius:100px; }
+    .tag-pass    { color:var(--success); background:var(--success-bg); }
+    .tag-fail    { color:var(--fail);    background:var(--fail-bg);    }
+    .tag-warn    { color:var(--gold);    background:var(--gold-soft);  }
+    .tag-ok      { color:var(--blue-light); background:var(--blue-soft); }
+    .lcard__val  { font-size:30px; font-weight:900; line-height:1; letter-spacing:-.02em; margin-bottom:8px; }
+    .lcard__bar  { height:4px; background:rgba(255,255,255,.055); border-radius:100px; overflow:hidden; }
+    .lcard__fill { height:100%; border-radius:100px; transition:width 1.35s cubic-bezier(.4,0,.2,1); }
+
+    /* Narrative, warnings, checklist */
+    .blk { margin-bottom:20px; }
+
+    .blk__lbl {
+      font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+      color:var(--text-muted); margin-bottom:14px;
+      display:flex; align-items:center; gap:9px;
+    }
+    .blk__dot { width:6px; height:6px; border-radius:50%; }
+
+    .narrative { font-size:15px; line-height:1.85; color:rgba(232,237,245,.82); }
+
+    .warn-list { display:flex; flex-direction:column; gap:8px; }
+    .warn-item {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:11px 14px;
+      background:var(--fail-bg);
+      border-left:3px solid var(--fail);
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      font-size:14px;
+    }
+    .warn-item__ico { color:var(--fail); flex-shrink:0; margin-top:2px; }
+
+    .empty-ok {
+      display:flex; align-items:center; gap:10px;
+      padding:14px; background:var(--success-bg); border-radius:var(--r-sm);
+      font-size:14px; color:var(--success); font-weight:500;
+    }
+
+    .checklist { display:flex; flex-direction:column; gap:10px; }
+    .chk-item {
+      display:flex; align-items:flex-start; gap:14px;
+      padding:13px 15px;
+      background:var(--gold-soft);
+      border:1px solid rgba(255,184,0,.11);
+      border-radius:var(--r-sm);
+      font-size:14px;
+    }
+    .chk-num { font-size:11px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--gold); min-width:22px; padding-top:1px; }
+
+    /* Actions row */
+    .actions { display:flex; gap:12px; flex-wrap:wrap; }
+
+    .verify-box {
+      flex:1; min-width:260px;
+      padding:17px 18px;
+      background:var(--blue-soft);
+      border:1px solid rgba(0,102,255,.2);
+      border-radius:var(--r-sm);
+    }
+    .verify-box__lbl { font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-muted); margin-bottom:5px; }
+    .verify-box a { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--blue-light); text-decoration:none; font-weight:500; word-break:break-all; }
+    .verify-box a:hover { text-decoration:underline; }
+
+    .btn-dl {
+      display:flex; align-items:center; gap:10px;
+      padding:17px 26px;
+      background:transparent;
+      border:1px solid var(--gold);
+      border-radius:var(--r-sm);
+      color:var(--gold);
+      font-family:'Inter',sans-serif;
+      font-size:14px; font-weight:700;
+      cursor:pointer;
+      transition:background var(--ease), box-shadow var(--ease);
+      white-space:nowrap;
+    }
+    .btn-dl:hover { background:var(--gold-glow); box-shadow:0 0 22px var(--gold-glow); }
+
+    /* ─── FOOTER ─────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 56px 0 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+      padding-bottom: 48px;
+    }
+
+    .footer-col__title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--ease);
+    }
+    .footer-col ul li a:hover { color: var(--text); }
+
+    .footer-col ul li a.link-muted {
+      font-size: 13px;
+      color: rgba(122,139,168,.55);
+      cursor: default;
+    }
+    .footer-col ul li a.link-muted:hover { color: rgba(122,139,168,.55); }
+
+    .footer-bar {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      text-align: center;
+    }
+    .footer-bar p { font-size: 12px; color: rgba(122,139,168,.6); }
+
+    @media(max-width:680px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+    }
+    @media(max-width:400px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Responsive ─────────────────────────────────── */
+    @media(max-width:680px){
+      .fgrid, .score-row, .layers { grid-template-columns:1fr; }
+      .cert-badge { padding:20px 26px; }
+      .cert-badge__title { font-size:19px; }
+      .hero { padding:52px 0 48px; }
+      .card { padding:20px; }
+    }
+
+    /* ─── Print ──────────────────────────────────────── */
+    @media print {
+      body { background:#fff; color:#000; }
+      header, .form-section, footer, .btn-dl, #overlay, #audit-form-card { display:none!important; }
+      #results { display:block!important; }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>ModelPassport</h1>
-        <p>Pre-deployment AI Bias Certification Platform</p>
-    </header>
 
-    <main>
-        <section id="upload-section">
-            <h2>Upload Artifacts</h2>
-            <input type="file" id="model-upload" placeholder="Upload Model" />
-            <input type="file" id="data-upload" placeholder="Upload Dataset" />
-            <button id="run-audit-btn">Run Audit</button>
-        </section>
+  <!-- ══════════════════════════════════════════════════
+       LOADING OVERLAY
+  ══════════════════════════════════════════════════ -->
+  <div id="overlay" role="status" aria-live="polite" aria-label="Running 4-layer bias audit">
+    <div class="ov-brand">ModelPassport</div>
+    <div class="spinner">
+      <svg viewBox="0 0 76 76">
+        <circle class="spin-track" cx="38" cy="38" r="32"/>
+        <circle class="spin-arc"   cx="38" cy="38" r="32"/>
+      </svg>
+    </div>
+    <div id="ovMsg">Analyzing data forensics...</div>
+    <div class="ov-dots" id="ovDots">
+      <div class="ov-dot on" id="od0"></div>
+      <div class="ov-dot"    id="od1"></div>
+      <div class="ov-dot"    id="od2"></div>
+      <div class="ov-dot"    id="od3"></div>
+    </div>
+  </div>
 
-        <section id="results-section">
-            <div id="data-forensics-result" class="result-card">
-                <h3>Data Forensics</h3>
-                <p>Awaiting audit...</p>
-            </div>
-            <div id="stress-test-result" class="result-card">
-                <h3>Stress Test</h3>
-                <p>Awaiting audit...</p>
-            </div>
-            <div id="fairness-metrics-result" class="result-card">
-                <h3>Fairness Metrics</h3>
-                <p>Awaiting audit...</p>
-            </div>
-            <div id="gemini-governance-result" class="result-card">
-                <h3>Gemini Governance</h3>
-                <p>Awaiting audit...</p>
-            </div>
-        </section>
-    </main>
+  <!-- ══════════════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════════════ -->
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero__pill">
+          <div class="hero__pill-dot"></div>
+          AI Bias Certification Platform
+        </div>
+        <h1 class="hero__logo">Model<span>Passport</span></h1>
+        <p class="hero__tagline">The Safety Certificate for Government AI</p>
+        <p class="hero__sub">Pre-deployment bias certification for AI systems that make decisions affecting human lives.</p>
+        <div class="hero__chips">
+          <div class="hero__chip"><span class="hero__chip-n">01</span> Data Forensics</div>
+          <div class="hero__chip"><span class="hero__chip-n">02</span> Stress Testing</div>
+          <div class="hero__chip"><span class="hero__chip-n">03</span> Fairness Metrics</div>
+          <div class="hero__chip"><span class="hero__chip-n">04</span> Gemini Governance</div>
+        </div>
+      </div>
+    </div>
+  </header>
 
-    <script src="app.js"></script>
+  <main>
+    <!-- ══════════════════════════════════════════════════
+         AUDIT FORM
+    ══════════════════════════════════════════════════ -->
+    <section class="form-section" id="audit-form-section">
+      <div class="wrap">
+        <div class="section-eyebrow">Run an Audit</div>
+        <div class="card card--blue" id="audit-form-card">
+          <form id="auditForm" novalidate>
+            <div class="fgrid">
+
+              <div class="field">
+                <label for="modelName">Model Name</label>
+                <input id="modelName" name="model_name" type="text" placeholder="e.g. LoanApprovalModel v2.1" required />
+              </div>
+
+              <div class="field">
+                <label for="organization">Organization</label>
+                <input id="organization" name="organization" type="text" placeholder="e.g. Ministry of Finance" required />
+              </div>
+
+              <div class="field">
+                <label for="domain">Domain</label>
+                <select id="domain" name="domain" required>
+                  <option value="" disabled selected>Select domain…</option>
+                  <option value="hiring">Hiring &amp; Recruitment</option>
+                  <option value="loan">Loan &amp; Credit</option>
+                  <option value="healthcare">Healthcare</option>
+                  <option value="government">Government Services</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="targetColumn">Target Column</label>
+                <input id="targetColumn" name="target_column" type="text" placeholder="e.g. income, approved" required />
+              </div>
+
+              <div class="field fcol2">
+                <label for="protectedAttrs">Protected Attributes <span style="opacity:.45;font-weight:400;text-transform:none">(comma-separated)</span></label>
+                <input id="protectedAttrs" name="protected_attributes" type="text" placeholder="e.g. sex, race, age" required />
+              </div>
+
+              <!-- Dataset upload -->
+              <div class="field fcol2">
+                <label>Dataset CSV <span style="color:var(--fail)">*</span></label>
+                <label class="uploader" for="datasetFile">
+                  <input type="file" id="datasetFile" name="dataset_file" accept=".csv" required />
+                  <div class="uploader__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                  </div>
+                  <div class="uploader__main">
+                    <span class="uploader__title" id="csv-label">Click to upload dataset CSV</span>
+                    <span class="uploader__hint"  id="csv-hint">.csv format required</span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Model upload (optional) -->
+              <div class="field fcol2">
+                <label>Model File <span style="opacity:.45;font-weight:400;text-transform:none">(optional — we'll train a RandomForest if omitted)</span></label>
+                <label class="uploader" for="modelFile">
+                  <input type="file" id="modelFile" name="model_file" accept=".joblib,.pkl" />
+                  <div class="uploader__icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7A8BA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                    </svg>
+                  </div>
+                  <div class="uploader__main">
+                    <span class="uploader__title" id="mdl-label">Click to upload model (.joblib / .pkl)</span>
+                    <span class="uploader__hint"  id="mdl-hint">sklearn model serialized with joblib</span>
+                  </div>
+                </label>
+              </div>
+
+            </div><!-- /fgrid -->
+
+            <hr class="divider" />
+
+            <div id="formErr" class="form-err" role="alert">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span id="formErrTxt">Something went wrong.</span>
+            </div>
+
+            <button type="submit" class="btn-run" id="submitBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/>
+              </svg>
+              Run Audit
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         RESULTS
+    ══════════════════════════════════════════════════ -->
+    <section id="results">
+      <div class="wrap--lg">
+
+        <!-- Certification Badge -->
+        <div class="badge-wrap">
+          <div class="cert-badge" id="certBadge">
+            <div class="cert-badge__ico"   id="certIco">—</div>
+            <div class="cert-badge__title" id="certTitle">—</div>
+            <div class="cert-badge__id"    id="certId">—</div>
+          </div>
+        </div>
+
+        <!-- Score ring + layer cards -->
+        <div class="score-row">
+          <div class="card ring-card">
+            <div class="ring-card__lbl">Overall Score</div>
+            <div class="ring-wrap">
+              <svg viewBox="0 0 120 120">
+                <circle class="ring-track" cx="60" cy="60" r="54"/>
+                <circle class="ring-fill"  cx="60" cy="60" r="54" id="ringFill" stroke="var(--blue)"/>
+              </svg>
+              <div class="ring-val">
+                <div class="ring-num" id="ringNum">—</div>
+                <div class="ring-sub">/ 100</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="layers">
+            <div class="lcard">
+              <div class="lcard__head">
+                <span class="lcard__name">Data Forensics</span>
+                <span class="lcard__tag" id="fs-tag">—</span>
+              </div>
+              <div class="lcard__val" id="fs-val">—</div>
+              <div class="lcard__bar"><div class="lcard__fill" id="fs-bar" style="width:0"></div></div>
+            </div>
+            <div class="lcard">
+              <div class="lcard__head">
+                <span class="lcard__name">Stress Test</span>
+                <span class="lcard__tag" id="st-tag">—</span>
+              </div>
+              <div class="lcard__val" id="st-val">—</div>
+              <div class="lcard__bar"><div class="lcard__fill" id="st-bar" style="width:0"></div></div>
+            </div>
+            <div class="lcard">
+              <div class="lcard__head">
+                <span class="lcard__name">Fairness Metrics</span>
+                <span class="lcard__tag" id="fm-tag">—</span>
+              </div>
+              <div class="lcard__val" id="fm-val">—</div>
+              <div class="lcard__bar"><div class="lcard__fill" id="fm-bar" style="width:0"></div></div>
+            </div>
+            <div class="lcard">
+              <div class="lcard__head">
+                <span class="lcard__name">Gemini Governance</span>
+                <span class="lcard__tag" id="gg-tag">—</span>
+              </div>
+              <div class="lcard__val" id="gg-val">—</div>
+              <div class="lcard__bar"><div class="lcard__fill" id="gg-bar" style="width:0"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Narrative -->
+        <div class="card blk">
+          <div class="blk__lbl">
+            <div class="blk__dot" style="background:var(--blue-light)"></div>
+            Gemini Governance Narrative
+          </div>
+          <p class="narrative" id="narrative">—</p>
+        </div>
+
+        <!-- Warnings -->
+        <div class="card blk">
+          <div class="blk__lbl">
+            <div class="blk__dot" style="background:var(--fail)"></div>
+            Audit Warnings
+          </div>
+          <div id="warnList" class="warn-list"></div>
+        </div>
+
+        <!-- Remediation -->
+        <div class="card blk">
+          <div class="blk__lbl">
+            <div class="blk__dot" style="background:var(--gold)"></div>
+            Remediation Checklist
+          </div>
+          <div id="chkList" class="checklist"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <div class="verify-box">
+            <div class="verify-box__lbl">Verification URL</div>
+            <a id="verifyLink" href="#" target="_blank" rel="noopener">—</a>
+          </div>
+          <button class="btn-dl" id="downloadBtn" onclick="window.print()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download Certificate
+          </button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+
+        <!-- Column 1: Product -->
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="#">How it Works</a></li>
+            <li><a href="#">Verify a Certificate</a></li>
+            <li><a href="#">API Documentation</a></li>
+            <li><a href="#" class="link-muted">Pricing (coming soon)</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 2: Company -->
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="#">About ModelPassport</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Compliance Standards -->
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4: Contact -->
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="#">contact@modelpassport.ai</a></li>
+            <li><a href="#">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════════
+       JAVASCRIPT
+  ══════════════════════════════════════════════════ -->
+  <script>
+    'use strict';
+
+    const API = 'http://127.0.0.1:8080';
+    const MSGS = [
+      'Analyzing data forensics…',
+      'Running stress tests…',
+      'Computing fairness metrics…',
+      'Generating governance report…',
+    ];
+
+    // ── File pickers ──────────────────────────────────
+    document.getElementById('datasetFile').addEventListener('change', function () {
+      if (this.files[0]) {
+        document.getElementById('csv-label').textContent = this.files[0].name;
+        document.getElementById('csv-label').className   = 'uploader__chosen';
+        document.getElementById('csv-hint').textContent  = 'Ready to upload';
+      }
+    });
+
+    document.getElementById('modelFile').addEventListener('change', function () {
+      if (this.files[0]) {
+        document.getElementById('mdl-label').textContent = this.files[0].name;
+        document.getElementById('mdl-label').className   = 'uploader__chosen';
+        document.getElementById('mdl-hint').textContent  = 'Model ready';
+      }
+    });
+
+    // ── Loading cycle ─────────────────────────────────
+    let _timer = null, _step = 0;
+
+    function startSpinner() {
+      _step = 0; _setStep(0);
+      _timer = setInterval(() => { _step = (_step + 1) % 4; _setStep(_step); }, 3000);
+    }
+
+    function _setStep(s) {
+      const el = document.getElementById('ovMsg');
+      el.style.opacity = '0';
+      setTimeout(() => { el.textContent = MSGS[s]; el.style.opacity = '1'; }, 180);
+      for (let i = 0; i < 4; i++) document.getElementById(`od${i}`).classList.toggle('on', i === s);
+    }
+
+    function stopSpinner() { clearInterval(_timer); _timer = null; }
+
+    function showOverlay() { document.getElementById('overlay').classList.add('on'); startSpinner(); }
+    function hideOverlay() { document.getElementById('overlay').classList.remove('on'); stopSpinner(); }
+
+    // ── Error helpers ─────────────────────────────────
+    function showErr(msg) {
+      const el = document.getElementById('formErr');
+      document.getElementById('formErrTxt').textContent = msg;
+      el.classList.add('on');
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+    function clearErr() { document.getElementById('formErr').classList.remove('on'); }
+
+    // ── Color by score ────────────────────────────────
+    function scoreColor(n) {
+      if (n >= 70) return 'var(--success)';
+      if (n >= 50) return 'var(--gold)';
+      return 'var(--fail)';
+    }
+
+    // ── Tag class ─────────────────────────────────────
+    function tagClass(s) {
+      const u = (s || '').toUpperCase();
+      if (u === 'PASS' || u === 'OK')  return 'tag-pass';
+      if (u === 'FAIL')               return 'tag-fail';
+      if (u === 'WARN' || u === 'WARNING') return 'tag-warn';
+      return 'tag-ok';
+    }
+
+    // ── Set layer card ────────────────────────────────
+    function setLayer(prefix, displayVal, barPct, statusTxt) {
+      const valEl  = document.getElementById(`${prefix}-val`);
+      const barEl  = document.getElementById(`${prefix}-bar`);
+      const tagEl  = document.getElementById(`${prefix}-tag`);
+      const num    = typeof displayVal === 'number' ? displayVal : NaN;
+
+      if (valEl) {
+        valEl.textContent = isNaN(num) ? String(displayVal) : num.toFixed(1);
+        valEl.style.color = isNaN(num) ? 'var(--text-muted)' : scoreColor(num);
+      }
+      if (barEl) {
+        barEl.style.background = isNaN(num) ? 'var(--text-muted)' : scoreColor(num);
+        setTimeout(() => { barEl.style.width = `${Math.min(100, Math.max(0, barPct || 0))}%`; }, 120);
+      }
+      if (tagEl) {
+        tagEl.textContent = statusTxt || '—';
+        tagEl.className   = `lcard__tag ${tagClass(statusTxt)}`;
+      }
+    }
+
+    // ── Collect all warnings ──────────────────────────
+    function allWarnings(d) {
+      const out = [];
+      const push = arr => Array.isArray(arr) && arr.forEach(w => { if (!out.includes(w)) out.push(w); });
+      push(d.data_forensics?.warnings);
+      push(d.stress_test?.overall_warnings);
+      push(d.fairness_metrics?.warnings);
+      return out;
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Populate all results ──────────────────────────
+    function populate(d) {
+      // Badge
+      const badge = document.getElementById('certBadge');
+      const ico   = document.getElementById('certIco');
+      const title = document.getElementById('certTitle');
+      const cid   = document.getElementById('certId');
+      const st    = (d.certification_status || '').toUpperCase();
+      cid.textContent = d.certificate_id || '—';
+
+      if (st === 'CERTIFIED') {
+        badge.className = 'cert-badge cert-badge--ok';
+        ico.textContent = '✓'; title.textContent = 'Certified';
+      } else if (st.includes('CONDITIONAL')) {
+        badge.className = 'cert-badge cert-badge--cond';
+        ico.textContent = '⚠'; title.textContent = 'Conditionally Certified';
+      } else {
+        badge.className = 'cert-badge cert-badge--no';
+        ico.textContent = '✗'; title.textContent = 'Not Certified';
+      }
+
+      // Score ring
+      const score  = parseFloat(d.overall_score) || 0;
+      const circ   = 2 * Math.PI * 54;          // r = 54
+      const offset = circ - (circ * score / 100);
+      const ringFill = document.getElementById('ringFill');
+      const ringNum  = document.getElementById('ringNum');
+      ringNum.textContent   = score.toFixed(1);
+      ringNum.style.color   = scoreColor(score);
+      ringFill.style.stroke = scoreColor(score);
+      ringFill.style.strokeDasharray = circ;
+      requestAnimationFrame(() => setTimeout(() => { ringFill.style.strokeDashoffset = offset; }, 80));
+
+      // Layer cards
+      const ls = d.layer_scores || {};
+      setLayer('fs', ls.data_forensics,  ls.data_forensics,  d.data_forensics?.status);
+      setLayer('st', ls.stress_test,     ls.stress_test,     d.stress_test?.status);
+      setLayer('fm', ls.fairness_metrics, ls.fairness_metrics, d.fairness_metrics?.status);
+
+      const gov  = d.gemini_governance || {};
+      const sev  = gov.severity_summary || {};
+      const risk = (sev.overall_risk_level || '—').toUpperCase();
+      const riskScore = risk === 'LOW' ? 85 : risk === 'MEDIUM' ? 50 : 20;
+      setLayer('gg', risk, riskScore, gov.gemini_status || gov.status);
+
+      // Narrative
+      document.getElementById('narrative').textContent = gov.narrative || d.narrative || '—';
+
+      // Warnings
+      const wl = document.getElementById('warnList');
+      wl.innerHTML = '';
+      const warns = allWarnings(d);
+      if (!warns.length) {
+        wl.innerHTML = `<div class="empty-ok">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          No warnings detected — all layers passed.
+        </div>`;
+      } else {
+        warns.forEach(w => {
+          wl.insertAdjacentHTML('beforeend', `<div class="warn-item">
+            <span class="warn-item__ico">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </span>
+            ${esc(w)}
+          </div>`);
+        });
+      }
+
+      // Checklist
+      const cl = document.getElementById('chkList');
+      cl.innerHTML = '';
+      const items = gov.remediation_checklist || [];
+      if (!items.length) {
+        cl.innerHTML = `<div class="chk-item"><span class="chk-num">#1</span>No remediation required.</div>`;
+      } else {
+        items.forEach((item, i) => {
+          cl.insertAdjacentHTML('beforeend', `<div class="chk-item">
+            <span class="chk-num">#${i+1}</span>${esc(item)}
+          </div>`);
+        });
+      }
+
+      // Verify link
+      const url = `${API}/verify/${d.certificate_id || ''}`;
+      const vl  = document.getElementById('verifyLink');
+      vl.textContent = url;
+      vl.href        = url;
+    }
+
+    // ── Form submit ───────────────────────────────────
+    document.getElementById('auditForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      clearErr();
+
+      if (!document.getElementById('datasetFile').files[0]) {
+        showErr('Please upload a dataset CSV file.'); return;
+      }
+
+      const fd = new FormData(this);
+      if (!document.getElementById('modelFile').files[0]) fd.delete('model_file');
+
+      showOverlay();
+
+      try {
+        const res  = await fetch(`${API}/audit/full`, { method:'POST', body:fd });
+        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(json.detail || json.message || `Server error ${res.status}`);
+        }
+
+        hideOverlay();
+        populate(json);
+
+        const sec = document.getElementById('results');
+        sec.classList.add('on');
+        setTimeout(() => sec.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+
+      } catch (err) {
+        hideOverlay();
+        showErr(err.message || 'Could not reach the ModelPassport server — is it running on port 8080?');
+        console.error('[ModelPassport]', err);
+      }
+    });
+  </script>
 </body>
 </html>
