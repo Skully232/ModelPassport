@@ -3,7 +3,7 @@ uvicorn[standard]
 pandas
 scikit-learn
 fairlearn
-google-generativeai
+google-genai
 python-dotenv
 pydantic-settings
 numpy

@@ -1,0 +1,259 @@
+{
+  "MP-2026-000001": {
+    "certificate_id": "MP-2026-000001",
+    "sha256_hash": "81c13852254578f13fd96beb6b5b00d002ba44b6f46f2a3f14d7d6925f8b9330",
+    "issued_at": "2026-04-12T13:56:35.292434+00:00",
+    "model_name": "Adult Income Classifier",
+    "organization": "ModelPassport Test",
+    "domain": "income",
+    "overall_score": 57.23,
+    "certification_status": "NOT CERTIFIED",
+    "verify_url": "https://modelpassport.ai/verify/MP-2026-000001",
+    "layer_results": {
+      "data_forensics": {
+        "layer": "data_forensics",
+        "total_records": 32561,
+        "total_features": 15,
+        "representation": {
+          "sex": {
+            "distribution": {
+              "Male": 66.92,
+              "Female": 33.08
+            },
+            "underrepresented_groups": [],
+            "is_balanced": true
+          },
+          "race": {
+            "distribution": {
+              "White": 85.43,
+              "Black": 9.59,
+              "Asian-Pac-Islander": 3.19,
+              "Amer-Indian-Eskimo": 0.96,
+              "Other": 0.83
+            },
+            "underrepresented_groups": [
+              "Black",
+              "Asian-Pac-Islander",
+              "Amer-Indian-Eskimo",
+              "Other"
+            ],
+            "is_balanced": false
+          }
+        },
+        "proxy_variables": {
+          "sex": [
+            {
+              "column": "relationship",
+              "correlation": 0.649,
+              "risk_level": "high"
+            },
+            {
+              "column": "marital.status",
+              "correlation": 0.462,
+              "risk_level": "medium"
+            }
+          ],
+          "race": []
+        },
+        "class_imbalance": {
+          "distribution": {
+            "<=50K": 75.92,
+            ">50K": 24.08
+          },
+          "imbalance_ratio": 3.15,
+          "minority_class_pct": 24.08,
+          "severity": "moderate",
+          "is_balanced": false
+        },
+        "health_score": 30,
+        "warnings": [
+          "Underrepresentation detected: Black, Asian-Pac-Islander, Amer-Indian-Eskimo, Other in 'race' column represent less than 20% of dataset",
+          "High-risk proxy variable: 'relationship' has 0.649 correlation with protected attribute 'sex'"
+        ],
+        "status": "fail"
+      },
+      "stress_test": {
+        "status": "Pass",
+        "overall_warnings": [],
+        "protected_attributes": {
+          "sex": {
+            "values": [
+              0,
+              1
+            ],
+            "positive_rates": {
+              "0": 0.204,
+              "1": 0.216
+            },
+            "disparate_impact_ratios": {
+              "0_vs_1": 0.9444444444444444
+            },
+            "flipping_rate": 0.016,
+            "warnings": [],
+            "disparate_impact_ratio_min_max": 0.9444444444444444,
+            "inferred_privileged_group": "1"
+          },
+          "race": {
+            "values": [
+              4,
+              2,
+              1,
+              3,
+              0
+            ],
+            "positive_rates": {
+              "4": 0.216,
+              "2": 0.212,
+              "1": 0.21,
+              "3": 0.212,
+              "0": 0.206
+            },
+            "disparate_impact_ratios": {
+              "2_vs_4": 0.9814814814814815,
+              "3_vs_4": 0.9814814814814815,
+              "1_vs_4": 0.9722222222222222,
+              "0_vs_4": 0.9537037037037036
+            },
+            "flipping_rate": 0.016,
+            "warnings": [],
+            "disparate_impact_ratio_min_max": 0.9537037037037036,
+            "inferred_privileged_group": "4"
+          }
+        },
+        "bias_score": 98.4
+      },
+      "fairness_metrics": {
+        "status": "Fail",
+        "overall_fairness_score": 43.29,
+        "per_attribute_scores": {
+          "sex": {
+            "unique_group_count": 2,
+            "demographic_parity": {
+              "demographic_parity_difference": 0.17886158422001303,
+              "positive_rates_by_group": {
+                "1": 0.25596330275229356,
+                "0": 0.07710171853228054
+              }
+            },
+            "equalized_odds": {
+              "equalized_odds_difference": 0.08108352284533758,
+              "true_positive_rates_by_group": {
+                "1": 0.6185725249424405,
+                "0": 0.5427350427350427
+              }
+            },
+            "disparate_impact": {
+              "disparate_impact_ratio": 0.3012217677426014,
+              "positive_rates_by_group": {
+                "1": 0.25596330275229356,
+                "0": 0.07710171853228054
+              },
+              "privileged_group": "1",
+              "unprivileged_group": "0",
+              "pairwise_ratios": {
+                "0_vs_1": 0.3012217677426014
+              }
+            }
+          },
+          "race": {
+            "unique_group_count": 5,
+            "demographic_parity": {
+              "demographic_parity_difference": 0.15690776884806734,
+              "positive_rates_by_group": {
+                "4": 0.21102729885057472,
+                "2": 0.08,
+                "3": 0.09259259259259259,
+                "0": 0.07692307692307693,
+                "1": 0.23383084577114427
+              }
+            },
+            "equalized_odds": {
+              "equalized_odds_difference": 0.11322789360172536,
+              "true_positive_rates_by_group": {
+                "4": 0.6132278936017254,
+                "2": 0.524390243902439,
+                "3": 0.5,
+                "0": 0.5714285714285714,
+                "1": 0.5849056603773585
+              }
+            },
+            "disparate_impact": {
+              "disparate_impact_ratio": 0.3289689034369886,
+              "positive_rates_by_group": {
+                "4": 0.21102729885057472,
+                "2": 0.08,
+                "3": 0.09259259259259259,
+                "0": 0.07692307692307693,
+                "1": 0.23383084577114427
+              },
+              "privileged_group": "1",
+              "unprivileged_group": "0",
+              "pairwise_ratios": {
+                "4_vs_1": 0.9024784482758621,
+                "2_vs_1": 0.3421276595744681,
+                "3_vs_1": 0.3959810874704492,
+                "0_vs_1": 0.3289689034369886
+              }
+            }
+          }
+        },
+        "individual_fairness": {
+          "individual_fairness_score": 0.7417779824965454,
+          "k_neighbours": 5,
+          "features_used": [
+            "age",
+            "workclass",
+            "fnlwgt",
+            "education",
+            "education.num",
+            "marital.status",
+            "occupation",
+            "relationship",
+            "capital.gain",
+            "capital.loss",
+            "hours.per.week",
+            "native.country"
+          ]
+        },
+        "metrics_summary": {
+          "sex": {
+            "demographic_parity_difference": 0.17886158422001303,
+            "equalized_odds_difference": 0.08108352284533758,
+            "disparate_impact_ratio": 0.3012217677426014
+          },
+          "race": {
+            "demographic_parity_difference": 0.15690776884806734,
+            "equalized_odds_difference": 0.11322789360172536,
+            "disparate_impact_ratio": 0.3289689034369886
+          }
+        },
+        "warnings": [
+          "[CRITICAL] Demographic Parity on 'sex': difference is +0.1789 (threshold \u00b10.10). Predicted positive rates diverge significantly across groups.",
+          "[CRITICAL] Disparate Impact on 'sex': ratio is 0.3012 (severe violation of the 80% Four-Fifths Rule). Privileged: '1', Unprivileged: '0'.",
+          "[CRITICAL] Demographic Parity on 'race': difference is +0.1569 (threshold \u00b10.10). Predicted positive rates diverge significantly across groups.",
+          "[WARNING] Equalized Odds on 'race': difference is +0.1132 (threshold \u00b10.10). Model error rates are inconsistent across demographic groups.",
+          "[CRITICAL] Disparate Impact on 'race': ratio is 0.3290 (severe violation of the 80% Four-Fifths Rule). Privileged: '1', Unprivileged: '0'."
+        ]
+      },
+      "gemini_governance": {
+        "narrative": "Governance narrative could not be generated due to an API error: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}. Please review the raw audit layer results directly and consult a fairness expert for manual assessment.",
+        "remediation_checklist": [
+          "Resolve the Gemini API connectivity issue and re-run the governance report.",
+          "In the interim, manually review all warnings surfaced by the audit layers."
+        ],
+        "severity_summary": {
+          "total_critical_warnings": 4,
+          "total_warnings": 3,
+          "overall_risk_level": "high"
+        },
+        "gemini_status": "error",
+        "status": "Fail"
+      }
+    },
+    "narrative": "Governance narrative could not be generated due to an API error: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}. Please review the raw audit layer results directly and consult a fairness expert for manual assessment.",
+    "remediation_checklist": [
+      "Resolve the Gemini API connectivity issue and re-run the governance report.",
+      "In the interim, manually review all warnings surfaced by the audit layers."
+    ]
+  }
+}

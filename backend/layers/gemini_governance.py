@@ -26,7 +26,7 @@ import re
 import textwrap
 from typing import Any, Dict, List, Tuple
 
-import google.generativeai as genai
+from google import genai
 
 logger = logging.getLogger(__name__)
 
@@ -304,6 +304,8 @@ class GeminiGovernanceEngine:
         model_name: str = "gemini-1.5-flash",
         temperature: float = 0.4,
     ) -> None:
+        from dotenv import load_dotenv
+        load_dotenv()
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model_name = model_name
         self.temperature = temperature
@@ -314,8 +316,7 @@ class GeminiGovernanceEngine:
                 "variable or pass api_key= to GeminiGovernanceEngine()."
             )
 
-        genai.configure(api_key=self.api_key)
-        self._model = genai.GenerativeModel(model_name=self.model_name)
+        self._client = genai.Client(api_key=self.api_key)
         logger.info(
             "GeminiGovernanceEngine initialised with model '%s'.", self.model_name
         )
@@ -369,12 +370,9 @@ class GeminiGovernanceEngine:
             logger.info(
                 "Sending governance prompt to Gemini (%s).", self.model_name
             )
-            response = self._model.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=self.temperature,
-                    max_output_tokens=2048,
-                ),
+            response = self._client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
             )
 
             raw_text = response.text
