@@ -1,1 +1,1 @@
-# Initialize layers
+# ModelPassport layers package

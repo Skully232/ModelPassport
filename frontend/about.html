@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About ModelPassport — AI Bias Certification Platform</title>
+  <meta name="description" content="ModelPassport was built for Google Solution Challenge 2026 to address the critical gap in AI governance. Learn about the mission, founder, and technology." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #0A1628; --navy-light: #0D1F3C; --navy-card: #0F2040;
+      --blue: #0066FF; --blue-glow: rgba(0,102,255,0.22); --blue-soft: rgba(0,102,255,0.08); --blue-light: #3385FF;
+      --gold: #FFB800; --gold-glow: rgba(255,184,0,0.18); --gold-soft: rgba(255,184,0,0.07);
+      --success: #00C48C; --success-bg: rgba(0,196,140,0.08);
+      --fail: #FF4444; --fail-bg: rgba(255,68,68,0.08);
+      --text: #E8EDF5; --text-muted: #7A8BA8; --border: rgba(255,255,255,0.07);
+      --r-sm: 8px; --r: 14px; --r-lg: 20px;
+      --ease: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+    ::selection { background: var(--blue); color: #fff; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%, rgba(0,102,255,.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255,184,0,.05) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,.013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    .site-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,22,40,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1080px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: relative; z-index: 1; }
+    .nav-logo { font-size: 18px; font-weight: 900; color: var(--gold); text-decoration: none; letter-spacing: -.02em; }
+    .nav-logo span { color: var(--text); opacity: .65; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-light); }
+    .nav-cta { padding: 8px 18px; background: var(--blue); border-radius: var(--r-sm); color: #fff !important; font-weight: 700 !important; }
+    .nav-cta:hover { background: #0052cc !important; box-shadow: 0 0 20px var(--blue-glow); }
+
+    .wrap { max-width: 800px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* Hero */
+    .hero { padding: 80px 0 60px; text-align: center; }
+    .hero__pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,102,255,.1); border: 1px solid rgba(0,102,255,.28); border-radius: 100px; padding: 6px 16px; font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 24px; }
+    .hero__pill-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light); animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.75); } }
+    .hero h1 { font-size: clamp(32px, 5vw, 54px); font-weight: 900; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 em { color: var(--gold); font-style: normal; }
+    .hero__sub { font-size: 17px; color: var(--text-muted); max-width: 540px; margin: 0 auto; line-height: 1.7; }
+
+    /* Section */
+    .section { padding: 60px 0; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 14px; }
+    .section h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 900; letter-spacing: -.02em; margin-bottom: 20px; }
+
+    /* Mission card */
+    .mission-card {
+      background: var(--navy-card);
+      border: 1px solid rgba(255,184,0,.16);
+      border-radius: var(--r-lg);
+      padding: 40px;
+      position: relative; overflow: hidden;
+    }
+
+    .mission-card::before {
+      content: '"'; position: absolute; top: -10px; left: 24px;
+      font-size: 120px; font-weight: 900; color: rgba(255,184,0,.06);
+      line-height: 1; pointer-events: none;
+    }
+
+    .mission-card p {
+      font-size: 20px; font-weight: 600; line-height: 1.7;
+      color: var(--text);
+    }
+
+    .mission-card p em { color: var(--gold); font-style: normal; }
+
+    /* Origin story */
+    .origin-card {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 32px;
+      margin-top: 20px;
+    }
+
+    .origin-card p { font-size: 15px; color: var(--text-muted); line-height: 1.8; margin-bottom: 12px; }
+
+    .badge-google {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 100px; padding: 8px 16px;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Founder */
+    .founder-card {
+      background: var(--navy-card); border: 1px solid rgba(0,102,255,.18);
+      border-radius: var(--r-lg); padding: 36px;
+      display: grid; grid-template-columns: auto 1fr; gap: 28px;
+      align-items: start;
+    }
+
+    .founder-avatar {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue) 0%, #A855F7 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 900; color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 0 30px rgba(0,102,255,.3);
+    }
+
+    .founder-body__name { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+    .founder-body__role { font-size: 13px; font-weight: 600; color: var(--blue-light); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 16px; }
+    .founder-body p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 8px; }
+
+    .founder-links { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+    .founder-link {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; background: rgba(255,255,255,.04);
+      border: 1px solid var(--border); border-radius: var(--r-sm);
+      font-size: 13px; font-weight: 600; color: var(--text-muted);
+      text-decoration: none; transition: color var(--ease), border-color var(--ease);
+    }
+
+    .founder-link:hover { color: var(--text); border-color: rgba(255,255,255,.15); }
+
+    /* Tech stack */
+    .tech-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      margin-top: 8px;
+    }
+
+    .tech-chip {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 18px 16px;
+      display: flex; align-items: center; gap: 12px;
+      transition: border-color var(--ease), transform var(--ease);
+    }
+
+    .tech-chip:hover { border-color: var(--blue); transform: translateY(-2px); }
+
+    .tech-chip__ico { font-size: 24px; flex-shrink: 0; }
+
+    .tech-chip__name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .tech-chip__role { font-size: 11px; color: var(--text-muted); }
+
+    /* Impact */
+    .impact-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+
+    .impact-card {
+      background: var(--fail-bg); border: 1px solid rgba(255,68,68,.15);
+      border-radius: var(--r); padding: 20px 22px;
+      display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start;
+    }
+
+    .impact-card__ico { font-size: 22px; }
+    .impact-card__title { font-size: 14px; font-weight: 800; color: var(--fail); margin-bottom: 4px; }
+    .impact-card__desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 56px 0 0; position: relative; z-index: 1; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 48px; }
+    .footer-col__title { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 14px; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .footer-col ul li a:hover { color: var(--text); }
+    .footer-bar { border-top: 1px solid var(--border); padding: 20px 0; text-align: center; }
+    .footer-bar p { font-size: 12px; color: rgba(122,139,168,.6); }
+
+    @media(max-width:768px) {
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+      .founder-card { grid-template-columns: 1fr; }
+      .founder-avatar { width: 64px; height: 64px; font-size: 24px; }
+      .nav-links { display: none; }
+    }
+
+    @media(max-width:580px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+      .tech-grid { grid-template-columns: 1fr; }
+    }
+
+    @media(max-width:400px) { .footer-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="nav-logo">Model<span>Passport</span></a>
+      <ul class="nav-links">
+        <li><a href="how-it-works.html" id="nav-how">How it Works</a></li>
+        <li><a href="verify.html" id="nav-verify">Verify</a></li>
+        <li><a href="pricing.html" id="nav-pricing">Pricing</a></li>
+        <li><a href="about.html" class="active" id="nav-about">About</a></li>
+        <li><a href="api-docs.html" id="nav-api">API Docs</a></li>
+        <li><a href="index.html" class="nav-cta" id="nav-run-audit">Run Audit</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero__pill">
+          <div class="hero__pill-dot"></div>
+          Our Story
+        </div>
+        <h1>About <em>ModelPassport</em></h1>
+        <p class="hero__sub">Built for the Google Solution Challenge 2026. Designed to make AI accountability real, measurable, and verifiable.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Mission -->
+    <div class="divider"></div>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-label">Our Mission</div>
+        <div class="mission-card">
+          <p><em>AI is making decisions about your loan, your job, your healthcare.</em> ModelPassport ensures those decisions are fair — and that organizations can prove it.</p>
+        </div>
+        <div class="origin-card">
+          <p>We live in a world where an algorithm trained on historical data decides whether you get a mortgage, whether you pass a resume screen, whether you receive priority medical care. These models operate invisibly, at scale, affecting millions of lives — often those least able to challenge the outcome.</p>
+          <p>The governance gap is real: organizations want to deploy AI responsibly but lack tooling to audit it objectively. Regulators want to enforce fairness but lack the technical standards to measure it. Citizens want accountability but have no way to verify claims. ModelPassport addresses all three.</p>
+          <div class="badge-google">
+            🏆 &nbsp; Built for Google Solution Challenge 2026 — Unbiased AI Decision Theme
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Founder -->
+    <div class="divider"></div>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-label">The Builder</div>
+        <h2>Meet the Founder</h2>
+        <div class="founder-card">
+          <div class="founder-avatar">S</div>
+          <div class="founder-body">
+            <div class="founder-body__name">Shivam Kumar S</div>
+            <div class="founder-body__role">Founder &amp; Developer</div>
+            <p>Final-year Computer Science student with a focus on Python, AI/ML, and backend systems. Built ModelPassport end-to-end — from FastAPI backend to four-layer audit pipeline to the frontend interface you're reading right now.</p>
+            <p>Passionate about the intersection of technology and social equity. Believes that the most powerful thing you can build is a system that holds other systems accountable.</p>
+            <div class="founder-links">
+              <a href="https://github.com/Skully232" class="founder-link" target="_blank" rel="noopener" id="founder-github">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                github.com/Skully232
+              </a>
+              <a href="mailto:contact@modelpassport.ai" class="founder-link" id="founder-email">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                contact@modelpassport.ai
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <div class="divider"></div>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-label">Technology</div>
+        <h2>Tech Stack</h2>
+        <div class="tech-grid">
+          <div class="tech-chip">
+            <div class="tech-chip__ico">🐍</div>
+            <div>
+              <div class="tech-chip__name">Python</div>
+              <div class="tech-chip__role">Core language</div>
+            </div>
+          </div>
+          <div class="tech-chip">
+            <div class="tech-chip__ico">⚡</div>
+            <div>
+              <div class="tech-chip__name">FastAPI</div>
+              <div class="tech-chip__role">Backend API</div>
+            </div>
+          </div>
+          <div class="tech-chip">
+            <div class="tech-chip__ico">✨</div>
+            <div>
+              <div class="tech-chip__name">Google Gemini AI</div>
+              <div class="tech-chip__role">Governance layer</div>
+            </div>
+          </div>
+          <div class="tech-chip">
+            <div class="tech-chip__ico">🔬</div>
+            <div>
+              <div class="tech-chip__name">scikit-learn</div>
+              <div class="tech-chip__role">Model training &amp; eval</div>
+            </div>
+          </div>
+          <div class="tech-chip">
+            <div class="tech-chip__ico">⚖️</div>
+            <div>
+              <div class="tech-chip__name">fairlearn</div>
+              <div class="tech-chip__role">Fairness metrics</div>
+            </div>
+          </div>
+          <div class="tech-chip">
+            <div class="tech-chip__ico">☁️</div>
+            <div>
+              <div class="tech-chip__name">Google Cloud Run</div>
+              <div class="tech-chip__role">Deployment</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Impact -->
+    <div class="divider"></div>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-label">Why This Matters</div>
+        <h2>Real Cases. Real Harm.</h2>
+        <p style="font-size:15px;color:var(--text-muted);margin-bottom:24px;">These aren't hypotheticals. These are documented harms from unaudited AI systems — each of which a pre-deployment bias audit could have caught.</p>
+        <div class="impact-cards">
+          <div class="impact-card">
+            <div class="impact-card__ico">🤖</div>
+            <div>
+              <div class="impact-card__title">Amazon Hiring Algorithm (2018)</div>
+              <div class="impact-card__desc">Amazon's AI resume screener, trained on historical hiring data, systematically penalized résumés that included the word "women's" and downgraded graduates of all-women's colleges — the project was scrapped after the bias was discovered. A fairness audit before deployment would have flagged gender as a significant proxy variable.</div>
+            </div>
+          </div>
+          <div class="impact-card">
+            <div class="impact-card__ico">🇳🇱</div>
+            <div>
+              <div class="impact-card__title">Dutch Childcare Benefit Scandal (2021)</div>
+              <div class="impact-card__desc">The Dutch tax authority's fraud detection algorithm flagged families with dual nationalities at disproportionate rates, leading to 26,000 families being wrongly accused of fraud and facing financial ruin. A demographic parity check would have surfaced the nationality-based disparate impact immediately.</div>
+            </div>
+          </div>
+          <div class="impact-card">
+            <div class="impact-card__ico">⚖️</div>
+            <div>
+              <div class="impact-card__title">COMPAS Recidivism Algorithm (2016)</div>
+              <div class="impact-card__desc">ProPublica's investigation found that COMPAS assigned higher recidivism risk scores to Black defendants compared to white defendants with the same criminal history — false positives for Black defendants were nearly twice the rate for white defendants. An equalized odds audit would have detected this disparity before deployment.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="how-it-works.html">How it Works</a></li>
+            <li><a href="verify.html">Verify a Certificate</a></li>
+            <li><a href="api-docs.html">API Documentation</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="about.html">About ModelPassport</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="mailto:contact@modelpassport.ai">contact@modelpassport.ai</a></li>
+            <li><a href="https://github.com/Skully232" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How ModelPassport Works — AI Bias Certification</title>
+  <meta name="description" content="Learn how ModelPassport's 4-layer AI bias audit pipeline works — data forensics, stress testing, fairness metrics, and Gemini governance reporting." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #0A1628;
+      --navy-light: #0D1F3C;
+      --navy-card: #0F2040;
+      --blue: #0066FF;
+      --blue-glow: rgba(0, 102, 255, 0.22);
+      --blue-soft: rgba(0, 102, 255, 0.08);
+      --blue-light: #3385FF;
+      --gold: #FFB800;
+      --gold-glow: rgba(255, 184, 0, 0.18);
+      --gold-soft: rgba(255, 184, 0, 0.07);
+      --success: #00C48C;
+      --success-bg: rgba(0, 196, 140, 0.08);
+      --fail: #FF4444;
+      --fail-bg: rgba(255, 68, 68, 0.08);
+      --text: #E8EDF5;
+      --text-muted: #7A8BA8;
+      --border: rgba(255, 255, 255, 0.07);
+      --r-sm: 8px; --r: 14px; --r-lg: 20px;
+      --ease: 0.25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    ::selection { background: var(--blue); color: #fff; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%, rgba(0, 102, 255, .09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255, 184, 0, .05) 0%, transparent 60%),
+        linear-gradient(rgba(255, 255, 255, .013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    /* Nav */
+    .site-nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10, 22, 40, 0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px; position: relative; z-index: 1;
+    }
+
+    .nav-logo { font-size: 18px; font-weight: 900; color: var(--gold); text-decoration: none; letter-spacing: -.02em; }
+    .nav-logo span { color: var(--text); opacity: .65; }
+
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-light); }
+    .nav-cta { padding: 8px 18px; background: var(--blue); border-radius: var(--r-sm); color: #fff !important; font-weight: 700 !important; }
+    .nav-cta:hover { background: #0052cc !important; box-shadow: 0 0 20px var(--blue-glow); }
+
+    /* Layout */
+    .wrap { max-width: 800px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* Hero */
+    .hero { padding: 80px 0 64px; text-align: center; }
+
+    .hero__pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0, 102, 255, .1); border: 1px solid rgba(0, 102, 255, .28);
+      border-radius: 100px; padding: 6px 16px;
+      font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+      color: var(--blue-light); margin-bottom: 24px;
+    }
+
+    .hero__pill-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.75); } }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 54px); font-weight: 900; letter-spacing: -.03em;
+      line-height: 1.1; margin-bottom: 20px;
+    }
+
+    .hero h1 em { color: var(--gold); font-style: normal; }
+
+    .hero__sub { font-size: 17px; color: var(--text-muted); max-width: 520px; margin: 0 auto; }
+
+    /* Section styles */
+    .section { padding: 60px 0; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--blue-light);
+      margin-bottom: 14px;
+    }
+
+    .section h2 {
+      font-size: clamp(24px, 3vw, 36px); font-weight: 900;
+      letter-spacing: -.02em; margin-bottom: 16px;
+    }
+
+    .section p { font-size: 16px; color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+
+    /* Problem section */
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+      margin-top: 36px;
+    }
+
+    .problem-card {
+      background: var(--fail-bg);
+      border: 1px solid rgba(255, 68, 68, .2);
+      border-radius: var(--r);
+      padding: 24px 20px;
+    }
+
+    .problem-card__ico { font-size: 28px; margin-bottom: 12px; }
+    .problem-card__title { font-size: 14px; font-weight: 700; color: var(--fail); margin-bottom: 8px; }
+    .problem-card__desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* Layer cards */
+    .layers-section { padding: 60px 0; }
+
+    .layers-section h2 {
+      font-size: clamp(24px, 3vw, 36px); font-weight: 900; letter-spacing: -.02em;
+      text-align: center; margin-bottom: 48px;
+    }
+
+    .layer-card {
+      display: grid; grid-template-columns: 80px 1fr; gap: 28px;
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      margin-bottom: 20px;
+      transition: border-color var(--ease), transform var(--ease);
+      position: relative; overflow: hidden;
+    }
+
+    .layer-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+    }
+
+    .layer-card--1::before { background: var(--blue); }
+    .layer-card--2::before { background: var(--gold); }
+    .layer-card--3::before { background: var(--success); }
+    .layer-card--4::before { background: #A855F7; }
+
+    .layer-card:hover { border-color: rgba(255,255,255,.12); transform: translateX(4px); }
+
+    .layer-num {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .layer-num--1 { background: var(--blue-soft); color: var(--blue-light); border: 1px solid rgba(0,102,255,.2); }
+    .layer-num--2 { background: var(--gold-soft); color: var(--gold); border: 1px solid rgba(255,184,0,.2); }
+    .layer-num--3 { background: var(--success-bg); color: var(--success); border: 1px solid rgba(0,196,140,.2); }
+    .layer-num--4 { background: rgba(168,85,247,.08); color: #A855F7; border: 1px solid rgba(168,85,247,.2); }
+
+    .layer-body {}
+
+    .layer-body__head {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .layer-body__name { font-size: 18px; font-weight: 800; }
+
+    .layer-body__tag {
+      font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 100px;
+    }
+
+    .tag-blue { background: var(--blue-soft); color: var(--blue-light); }
+    .tag-gold { background: var(--gold-soft); color: var(--gold); }
+    .tag-green { background: var(--success-bg); color: var(--success); }
+    .tag-purple { background: rgba(168,85,247,.1); color: #A855F7; }
+
+    .layer-body__what {
+      font-size: 14px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--text-muted); margin-bottom: 8px;
+    }
+
+    .layer-body p { font-size: 15px; color: rgba(232,237,245,.8); line-height: 1.75; margin-bottom: 12px; }
+
+    .layer-body__why {
+      background: rgba(255,255,255,.03); border-radius: var(--r-sm);
+      padding: 14px 16px; border-left: 2px solid var(--border);
+    }
+
+    .layer-body__why-lbl { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+
+    .layer-body__why p { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+    /* Certificate section */
+    .cert-section { padding: 60px 0; }
+
+    .cert-explainer {
+      background: var(--navy-card);
+      border: 1px solid rgba(255,184,0,.18);
+      border-radius: var(--r-lg);
+      padding: 36px;
+    }
+
+    .cert-explainer h2 { font-size: 26px; font-weight: 900; color: var(--gold); margin-bottom: 8px; }
+    .cert-explainer__id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px; font-weight: 700; color: var(--blue-light);
+      margin-bottom: 20px; letter-spacing: .04em;
+    }
+
+    .cert-explainer p { font-size: 15px; color: var(--text-muted); line-height: 1.75; margin-bottom: 12px; }
+
+    .cert-fields { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+
+    .cert-field {
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 10px 16px;
+      font-size: 12px;
+    }
+
+    .cert-field__k { color: var(--text-muted); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; font-size: 10px; margin-bottom: 3px; }
+    .cert-field__v { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
+
+    /* Who needs this */
+    .audience-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+      margin-top: 36px;
+    }
+
+    .audience-card {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 24px 20px;
+      text-align: center;
+      transition: border-color var(--ease), transform var(--ease);
+    }
+
+    .audience-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+
+    .audience-card__ico { font-size: 32px; margin-bottom: 12px; }
+    .audience-card__title { font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+    .audience-card__desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    /* CTA */
+    .cta-section { padding: 80px 0; text-align: center; }
+
+    .cta-section h2 { font-size: clamp(24px, 3vw, 36px); font-weight: 900; margin-bottom: 12px; }
+    .cta-section p { font-size: 16px; color: var(--text-muted); margin-bottom: 32px; }
+
+    .btn-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 18px 36px; background: var(--gold); border: none;
+      border-radius: var(--r-sm); color: #000;
+      font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 800;
+      cursor: pointer; text-decoration: none;
+      position: relative; overflow: hidden;
+      transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+    }
+
+    .btn-cta::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 55%);
+    }
+
+    .btn-cta:hover { background: #ffc527; transform: translateY(-2px); box-shadow: 0 10px 36px var(--gold-glow); }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); margin: 0; }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 56px 0 0; position: relative; z-index: 1; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 48px; }
+    .footer-col__title { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 14px; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .footer-col ul li a:hover { color: var(--text); }
+    .footer-bar { border-top: 1px solid var(--border); padding: 20px 0; text-align: center; }
+    .footer-bar p { font-size: 12px; color: rgba(122, 139, 168, .6); }
+
+    @media(max-width:768px) {
+      .problem-grid { grid-template-columns: 1fr; }
+      .audience-grid { grid-template-columns: 1fr 1fr; }
+      .layer-card { grid-template-columns: 1fr; }
+      .layer-num { width: 48px; height: 48px; font-size: 18px; }
+      .nav-links { display: none; }
+    }
+
+    @media(max-width:580px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+      .audience-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media(max-width:400px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .audience-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="nav-logo">Model<span>Passport</span></a>
+      <ul class="nav-links">
+        <li><a href="how-it-works.html" class="active" id="nav-how">How it Works</a></li>
+        <li><a href="verify.html" id="nav-verify">Verify</a></li>
+        <li><a href="pricing.html" id="nav-pricing">Pricing</a></li>
+        <li><a href="about.html" id="nav-about">About</a></li>
+        <li><a href="api-docs.html" id="nav-api">API Docs</a></li>
+        <li><a href="index.html" class="nav-cta" id="nav-run-audit">Run Audit</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero__pill">
+          <div class="hero__pill-dot"></div>
+          Technical Overview
+        </div>
+        <h1>How <em>ModelPassport</em> Works</h1>
+        <p class="hero__sub">From raw CSV to certified AI — a transparent, four-layer audit pipeline designed for accountability.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── Section 1: The Problem ───────────────────── -->
+    <div class="divider"></div>
+    <section class="section">
+      <div class="wrap">
+        <div class="section-label">The Problem</div>
+        <h2>AI systems are making life-changing decisions — with zero accountability</h2>
+        <p>Loan approvals, job screenings, healthcare diagnoses, criminal risk scores. Algorithms trained on biased historical data are deployed at scale, affecting millions of people — often those least able to challenge the decision.</p>
+        <p>The gap? There is no mandatory pre-deployment bias check. Models ship without certification. Organizations have no standardized way to prove their AI is fair.</p>
+
+        <div class="problem-grid">
+          <div class="problem-card">
+            <div class="problem-card__ico">🏦</div>
+            <div class="problem-card__title">Financial Exclusion</div>
+            <div class="problem-card__desc">Loan algorithms trained on historical data systematically deny credit to protected groups — perpetuating poverty cycles.</div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-card__ico">⚖️</div>
+            <div class="problem-card__title">Criminal Justice</div>
+            <div class="problem-card__desc">Risk assessment tools like COMPAS assign higher recidivism scores to Black defendants with no transparent audit trail.</div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-card__ico">💼</div>
+            <div class="problem-card__title">Hiring Discrimination</div>
+            <div class="problem-card__desc">Automated resume screeners replicate the biases of their training data, filtering out qualified candidates from minority groups.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Section 2: Four Layers ───────────────────── -->
+    <div class="divider"></div>
+    <section class="layers-section">
+      <div class="wrap">
+        <div class="section-label" style="text-align:center;">The Solution</div>
+        <h2>Four Audit Layers. One Certificate.</h2>
+
+        <!-- Layer 1 -->
+        <div class="layer-card layer-card--1">
+          <div class="layer-num layer-num--1">01</div>
+          <div class="layer-body">
+            <div class="layer-body__head">
+              <div class="layer-body__name">Data Forensics</div>
+              <span class="layer-body__tag tag-blue">Layer 1</span>
+            </div>
+            <div class="layer-body__what">What it checks</div>
+            <p>Before a model even sees training, the data tells a story. Layer 1 audits your dataset for representation gaps (are protected groups proportionally represented?), proxy columns (is ZIP code secretly standing in for race?), and class imbalance (is the outcome skewed toward one group?). It produces a <strong>Data Health Score</strong> from 0–100.</p>
+            <div class="layer-body__why">
+              <div class="layer-body__why-lbl">Why it matters</div>
+              <p>A model can only be as fair as the data it learned from. Biased data produces biased models — every time. Catching this before training is 10× cheaper than fixing it post-deployment.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer 2 -->
+        <div class="layer-card layer-card--2">
+          <div class="layer-num layer-num--2">02</div>
+          <div class="layer-body">
+            <div class="layer-body__head">
+              <div class="layer-body__name">Synthetic Stress Test</div>
+              <span class="layer-body__tag tag-gold">Layer 2</span>
+            </div>
+            <div class="layer-body__what">What it checks</div>
+            <p>We create synthetic <strong>twin profiles</strong> — pairs of applicants identical in every way except protected attributes (race, gender, age). We send both twins through the model and measure how often the decision <em>flips</em> based solely on the protected attribute. This is the <strong>counterfactual flipping rate</strong>.</p>
+            <p>We also apply the <strong>EEOC 80% Rule</strong>: if any protected group receives a positive outcome at less than 80% the rate of the highest group, that's legally significant disparate impact.</p>
+            <div class="layer-body__why">
+              <div class="layer-body__why-lbl">Why it matters</div>
+              <p>This test is the gold standard for detecting hidden discrimination. The model doesn't need to explicitly use race — it just needs to rely on a correlated feature. Twin testing catches it.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer 3 -->
+        <div class="layer-card layer-card--3">
+          <div class="layer-num layer-num--3">03</div>
+          <div class="layer-body">
+            <div class="layer-body__head">
+              <div class="layer-body__name">Fairness Metrics</div>
+              <span class="layer-body__tag tag-green">Layer 3</span>
+            </div>
+            <div class="layer-body__what">What it checks</div>
+            <p><strong>Demographic Parity:</strong> Does the model approve loans / hire / recommend treatment at equal rates across groups? A perfect model would have zero parity difference.</p>
+            <p><strong>Equalized Odds:</strong> When someone truly deserves a positive outcome, does the model give it to them equally regardless of group? This measures false negative rate parity — the cost of being wrongly denied.</p>
+            <p><strong>Disparate Impact Ratio:</strong> The EU AI Act and EEOC require that the selection rate for any protected group is at least 80% of the highest group. We compute this directly.</p>
+            <div class="layer-body__why">
+              <div class="layer-body__why-lbl">Why it matters</div>
+              <p>These are the metrics cited in regulatory frameworks globally — EU AI Act, US EEOC guidelines, India's DPDP Act. A ModelPassport certificate proves compliance.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layer 4 -->
+        <div class="layer-card layer-card--4">
+          <div class="layer-num layer-num--4">04</div>
+          <div class="layer-body">
+            <div class="layer-body__head">
+              <div class="layer-body__name">Gemini Governance</div>
+              <span class="layer-body__tag tag-purple">Layer 4</span>
+            </div>
+            <div class="layer-body__what">What it checks</div>
+            <p>The first three layers produce numbers. Layer 4 makes them <strong>human-readable</strong>. Google Gemini AI synthesizes all findings into a plain-language narrative that a policymaker, procurement officer, or journalist can understand — without a data science degree.</p>
+            <p>It also generates a prioritized <strong>remediation checklist</strong>: specific, actionable steps ranked by severity. And it produces a severity summary — LOW / MEDIUM / HIGH / CRITICAL — for executive dashboards.</p>
+            <div class="layer-body__why">
+              <div class="layer-body__why-lbl">Why it matters</div>
+              <p>Audit reports that only engineers can read don't drive accountability. Gemini Governance bridges the gap between technical findings and policy action.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Section 3: The Certificate ──────────────── -->
+    <div class="divider"></div>
+    <section class="cert-section">
+      <div class="wrap">
+        <div class="section-label">The Certificate</div>
+        <div class="cert-explainer">
+          <h2>What is MP-2026-000001?</h2>
+          <div class="cert-explainer__id">MP-2026-000001</div>
+          <p>Every completed audit produces a uniquely identified, tamper-evident certificate. The ID encodes the platform name, year, and a sequential counter (thread-safe, no duplicates). The certificate is hashed with SHA-256 and stored in a verifiable registry.</p>
+          <p>Anyone — regulator, competitor, citizen — can verify the certificate is authentic by entering the ID at <strong>modelpassport.ai/verify</strong>. No login required. The verification returns the full audit results, scores, and hash.</p>
+          <div class="cert-fields">
+            <div class="cert-field">
+              <div class="cert-field__k">Certificate ID</div>
+              <div class="cert-field__v">MP-2026-000001</div>
+            </div>
+            <div class="cert-field">
+              <div class="cert-field__k">Format</div>
+              <div class="cert-field__v">MP-{YEAR}-{6-digit sequential}</div>
+            </div>
+            <div class="cert-field">
+              <div class="cert-field__k">Hash Algorithm</div>
+              <div class="cert-field__v">SHA-256</div>
+            </div>
+            <div class="cert-field">
+              <div class="cert-field__k">Public Verification</div>
+              <div class="cert-field__v">GET /verify/{id}</div>
+            </div>
+            <div class="cert-field">
+              <div class="cert-field__k">Storage</div>
+              <div class="cert-field__v">JSON → Firestore (prod)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Section 4: Who needs this ───────────────── -->
+    <div class="divider"></div>
+    <section class="section">
+      <div class="wrap--lg">
+        <div class="section-label" style="text-align:center;">Who Needs This</div>
+        <h2 style="text-align:center;font-size:clamp(24px,3vw,36px);font-weight:900;letter-spacing:-.02em;margin-bottom:12px;">Every organization deploying AI that affects people</h2>
+        <p style="text-align:center;max-width:520px;margin:0 auto;">From government ministries to early-stage startups, if your model makes decisions about people, you need a ModelPassport.</p>
+        <div class="audience-grid">
+          <div class="audience-card">
+            <div class="audience-card__ico">🏛️</div>
+            <div class="audience-card__title">Government</div>
+            <div class="audience-card__desc">Benefits eligibility, welfare allocation, public sector hiring — prove compliance before deployment, not after a scandal.</div>
+          </div>
+          <div class="audience-card">
+            <div class="audience-card__ico">🏦</div>
+            <div class="audience-card__title">Banks & Finance</div>
+            <div class="audience-card__desc">Credit scoring, insurance underwriting, fraud detection — demonstrate fair lending to regulators with a verifiable certificate.</div>
+          </div>
+          <div class="audience-card">
+            <div class="audience-card__ico">🏥</div>
+            <div class="audience-card__title">Healthcare</div>
+            <div class="audience-card__desc">Diagnostic prioritization, resource allocation, drug trial matching — ensure equitable care delivery across demographic groups.</div>
+          </div>
+          <div class="audience-card">
+            <div class="audience-card__ico">💼</div>
+            <div class="audience-card__title">HR Technology</div>
+            <div class="audience-card__desc">Resume screening, candidate ranking, performance evaluation — protect against discriminatory hiring and meet EEOC requirements.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ──────────────────────────────────────── -->
+    <div class="divider"></div>
+    <section class="cta-section">
+      <div class="wrap">
+        <h2>Ready to certify your model?</h2>
+        <p>Upload your dataset and get a full 4-layer audit report in minutes. Free to start.</p>
+        <a href="index.html" class="btn-cta" id="cta-run-audit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Run Your First Audit
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="how-it-works.html">How it Works</a></li>
+            <li><a href="verify.html">Verify a Certificate</a></li>
+            <li><a href="api-docs.html">API Documentation</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="about.html">About ModelPassport</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="mailto:contact@modelpassport.ai">contact@modelpassport.ai</a></li>
+            <li><a href="https://github.com/Skully232" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

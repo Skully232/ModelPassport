@@ -1026,5 +1026,262 @@
       "Resolve the Gemini API connectivity issue and re-run the governance report.",
       "In the interim, manually review all warnings surfaced by the audit layers."
     ]
+  },
+  "MP-2026-000005": {
+    "certificate_id": "MP-2026-000005",
+    "sha256_hash": "61947dbeb1c73c034b8b72c363a00cbe10fe6ecdd902d46d7440aed992205c4b",
+    "issued_at": "2026-04-18T18:19:22.159571+00:00",
+    "model_name": "Adult income certifier",
+    "organization": " Model Test 4",
+    "domain": "government",
+    "overall_score": 57.03,
+    "certification_status": "NOT CERTIFIED",
+    "verify_url": "https://modelpassport.ai/verify/MP-2026-000005",
+    "layer_results": {
+      "data_forensics": {
+        "layer": "data_forensics",
+        "total_records": 32561,
+        "total_features": 15,
+        "representation": {
+          "sex": {
+            "distribution": {
+              "Male": 66.92,
+              "Female": 33.08
+            },
+            "underrepresented_groups": [],
+            "is_balanced": true
+          },
+          "race": {
+            "distribution": {
+              "White": 85.43,
+              "Black": 9.59,
+              "Asian-Pac-Islander": 3.19,
+              "Amer-Indian-Eskimo": 0.96,
+              "Other": 0.83
+            },
+            "underrepresented_groups": [
+              "Black",
+              "Asian-Pac-Islander",
+              "Amer-Indian-Eskimo",
+              "Other"
+            ],
+            "is_balanced": false
+          }
+        },
+        "proxy_variables": {
+          "sex": [
+            {
+              "column": "relationship",
+              "correlation": 0.649,
+              "risk_level": "high"
+            },
+            {
+              "column": "marital.status",
+              "correlation": 0.462,
+              "risk_level": "medium"
+            }
+          ],
+          "race": []
+        },
+        "class_imbalance": {
+          "distribution": {
+            "<=50K": 75.92,
+            ">50K": 24.08
+          },
+          "imbalance_ratio": 3.15,
+          "minority_class_pct": 24.08,
+          "severity": "moderate",
+          "is_balanced": false
+        },
+        "health_score": 30,
+        "warnings": [
+          "Underrepresentation detected: Black, Asian-Pac-Islander, Amer-Indian-Eskimo, Other in 'race' column represent less than 20% of dataset",
+          "High-risk proxy variable: 'relationship' has 0.649 correlation with protected attribute 'sex'"
+        ],
+        "status": "fail"
+      },
+      "stress_test": {
+        "status": "Pass",
+        "overall_warnings": [],
+        "protected_attributes": {
+          "sex": {
+            "values": [
+              0,
+              1
+            ],
+            "positive_rates": {
+              "0": 0.286,
+              "1": 0.31
+            },
+            "disparate_impact_ratios": {
+              "0_vs_1": 0.9225806451612902
+            },
+            "flipping_rate": 0.028,
+            "warnings": [],
+            "disparate_impact_ratio_min_max": 0.9225806451612902,
+            "inferred_privileged_group": "1"
+          },
+          "race": {
+            "values": [
+              4,
+              2,
+              1,
+              3,
+              0
+            ],
+            "positive_rates": {
+              "4": 0.31,
+              "2": 0.296,
+              "1": 0.298,
+              "3": 0.298,
+              "0": 0.298
+            },
+            "disparate_impact_ratios": {
+              "1_vs_4": 0.9612903225806452,
+              "3_vs_4": 0.9612903225806452,
+              "0_vs_4": 0.9612903225806452,
+              "2_vs_4": 0.9548387096774194
+            },
+            "flipping_rate": 0.016,
+            "warnings": [],
+            "disparate_impact_ratio_min_max": 0.9548387096774194,
+            "inferred_privileged_group": "4"
+          }
+        },
+        "bias_score": 97.8
+      },
+      "fairness_metrics": {
+        "status": "Fail",
+        "overall_fairness_score": 43.29,
+        "per_attribute_scores": {
+          "sex": {
+            "unique_group_count": 2,
+            "demographic_parity": {
+              "demographic_parity_difference": 0.17886158422001303,
+              "positive_rates_by_group": {
+                "1": 0.25596330275229356,
+                "0": 0.07710171853228054
+              }
+            },
+            "equalized_odds": {
+              "equalized_odds_difference": 0.08108352284533758,
+              "true_positive_rates_by_group": {
+                "1": 0.6185725249424405,
+                "0": 0.5427350427350427
+              }
+            },
+            "disparate_impact": {
+              "disparate_impact_ratio": 0.3012217677426014,
+              "positive_rates_by_group": {
+                "1": 0.25596330275229356,
+                "0": 0.07710171853228054
+              },
+              "privileged_group": "1",
+              "unprivileged_group": "0",
+              "pairwise_ratios": {
+                "0_vs_1": 0.3012217677426014
+              }
+            }
+          },
+          "race": {
+            "unique_group_count": 5,
+            "demographic_parity": {
+              "demographic_parity_difference": 0.15690776884806734,
+              "positive_rates_by_group": {
+                "4": 0.21102729885057472,
+                "2": 0.08,
+                "3": 0.09259259259259259,
+                "0": 0.07692307692307693,
+                "1": 0.23383084577114427
+              }
+            },
+            "equalized_odds": {
+              "equalized_odds_difference": 0.11322789360172536,
+              "true_positive_rates_by_group": {
+                "4": 0.6132278936017254,
+                "2": 0.524390243902439,
+                "3": 0.5,
+                "0": 0.5714285714285714,
+                "1": 0.5849056603773585
+              }
+            },
+            "disparate_impact": {
+              "disparate_impact_ratio": 0.3289689034369886,
+              "positive_rates_by_group": {
+                "4": 0.21102729885057472,
+                "2": 0.08,
+                "3": 0.09259259259259259,
+                "0": 0.07692307692307693,
+                "1": 0.23383084577114427
+              },
+              "privileged_group": "1",
+              "unprivileged_group": "0",
+              "pairwise_ratios": {
+                "4_vs_1": 0.9024784482758621,
+                "2_vs_1": 0.3421276595744681,
+                "3_vs_1": 0.3959810874704492,
+                "0_vs_1": 0.3289689034369886
+              }
+            }
+          }
+        },
+        "individual_fairness": {
+          "individual_fairness_score": 0.7417779824965454,
+          "k_neighbours": 5,
+          "features_used": [
+            "age",
+            "workclass",
+            "fnlwgt",
+            "education",
+            "education.num",
+            "marital.status",
+            "occupation",
+            "relationship",
+            "capital.gain",
+            "capital.loss",
+            "hours.per.week",
+            "native.country"
+          ]
+        },
+        "metrics_summary": {
+          "sex": {
+            "demographic_parity_difference": 0.17886158422001303,
+            "equalized_odds_difference": 0.08108352284533758,
+            "disparate_impact_ratio": 0.3012217677426014
+          },
+          "race": {
+            "demographic_parity_difference": 0.15690776884806734,
+            "equalized_odds_difference": 0.11322789360172536,
+            "disparate_impact_ratio": 0.3289689034369886
+          }
+        },
+        "warnings": [
+          "[CRITICAL] Demographic Parity on 'sex': difference is +0.1789 (threshold \u00b10.10). Predicted positive rates diverge significantly across groups.",
+          "[CRITICAL] Disparate Impact on 'sex': ratio is 0.3012 (severe violation of the 80% Four-Fifths Rule). Privileged: '1', Unprivileged: '0'.",
+          "[CRITICAL] Demographic Parity on 'race': difference is +0.1569 (threshold \u00b10.10). Predicted positive rates diverge significantly across groups.",
+          "[WARNING] Equalized Odds on 'race': difference is +0.1132 (threshold \u00b10.10). Model error rates are inconsistent across demographic groups.",
+          "[CRITICAL] Disparate Impact on 'race': ratio is 0.3290 (severe violation of the 80% Four-Fifths Rule). Privileged: '1', Unprivileged: '0'."
+        ]
+      },
+      "gemini_governance": {
+        "narrative": "Governance narrative could not be generated due to an API error: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-lite\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-lite\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-lite\\nPlease retry in 52.987877959s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash-lite'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash-lite'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash-lite'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '52s'}]}}. Please review the raw audit layer results directly and consult a fairness expert for manual assessment.",
+        "remediation_checklist": [
+          "Resolve the Gemini API connectivity issue and re-run the governance report.",
+          "In the interim, manually review all warnings surfaced by the audit layers."
+        ],
+        "severity_summary": {
+          "total_critical_warnings": 4,
+          "total_warnings": 3,
+          "overall_risk_level": "high"
+        },
+        "gemini_status": "error",
+        "status": "Fail"
+      }
+    },
+    "narrative": "Governance narrative could not be generated due to an API error: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash-lite\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-lite\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash-lite\\nPlease retry in 52.987877959s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash-lite'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash-lite'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash-lite'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '52s'}]}}. Please review the raw audit layer results directly and consult a fairness expert for manual assessment.",
+    "remediation_checklist": [
+      "Resolve the Gemini API connectivity issue and re-run the governance report.",
+      "In the interim, manually review all warnings surfaced by the audit layers."
+    ]
   }
 }

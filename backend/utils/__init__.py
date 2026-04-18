@@ -1,1 +1,1 @@
-# Initialize utils
+# ModelPassport utils package

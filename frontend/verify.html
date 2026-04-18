@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify a Certificate — ModelPassport</title>
+  <meta name="description" content="Verify the authenticity of an AI bias audit certificate issued by ModelPassport. Enter the certificate ID to view full audit results." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Design Tokens ─────────────────────────────── */
+    :root {
+      --navy: #0A1628;
+      --navy-light: #0D1F3C;
+      --navy-card: #0F2040;
+      --blue: #0066FF;
+      --blue-glow: rgba(0, 102, 255, 0.22);
+      --blue-soft: rgba(0, 102, 255, 0.08);
+      --blue-light: #3385FF;
+      --gold: #FFB800;
+      --gold-glow: rgba(255, 184, 0, 0.18);
+      --gold-soft: rgba(255, 184, 0, 0.07);
+      --success: #00C48C;
+      --success-bg: rgba(0, 196, 140, 0.08);
+      --fail: #FF4444;
+      --fail-bg: rgba(255, 68, 68, 0.08);
+      --text: #E8EDF5;
+      --text-muted: #7A8BA8;
+      --border: rgba(255, 255, 255, 0.07);
+      --r-sm: 8px;
+      --r: 14px;
+      --r-lg: 20px;
+      --ease: 0.25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    ::selection { background: var(--blue); color: #fff; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%, rgba(0, 102, 255, .09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255, 184, 0, .05) 0%, transparent 60%),
+        linear-gradient(rgba(255, 255, 255, .013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    /* ─── Nav ─────────────────────────────────────────── */
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 22, 40, 0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--gold);
+      text-decoration: none;
+      letter-spacing: -.02em;
+    }
+
+    .nav-logo span { color: var(--text); opacity: .65; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--ease);
+    }
+
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-light); }
+
+    .nav-cta {
+      padding: 8px 18px;
+      background: var(--blue);
+      border-radius: var(--r-sm);
+      color: #fff !important;
+      font-weight: 700 !important;
+      transition: background var(--ease), box-shadow var(--ease) !important;
+    }
+
+    .nav-cta:hover { background: #0052cc !important; box-shadow: 0 0 20px var(--blue-glow); }
+
+    /* ─── Layout ─────────────────────────────────────── */
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* ─── Hero ────────────────────────────────────────── */
+    .hero {
+      padding: 80px 0 56px;
+      text-align: center;
+    }
+
+    .hero__pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 102, 255, .1);
+      border: 1px solid rgba(0, 102, 255, .28);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--blue-light);
+      margin-bottom: 24px;
+    }
+
+    .hero__pill-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .4; transform: scale(.75); }
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 900;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span { color: var(--gold); }
+
+    .hero__sub {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ─── Search card ─────────────────────────────────── */
+    .search-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 36px;
+      backdrop-filter: blur(10px);
+      margin-bottom: 32px;
+    }
+
+    .search-card__lbl {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: rgba(255, 255, 255, .038);
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: var(--r-sm);
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      outline: none;
+      transition: border-color var(--ease), box-shadow var(--ease);
+      letter-spacing: .04em;
+    }
+
+    .search-input::placeholder { color: rgba(255, 255, 255, .22); font-weight: 400; }
+
+    .search-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-glow);
+    }
+
+    .btn-verify {
+      padding: 14px 28px;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--r-sm);
+      color: #000;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+      transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+    }
+
+    .btn-verify::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.18) 0%, transparent 55%);
+    }
+
+    .btn-verify:hover {
+      background: #ffc527;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px var(--gold-glow);
+    }
+
+    .btn-verify:active { transform: none; }
+
+    .btn-verify:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ─── Loading ─────────────────────────────────────── */
+    .loading-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 40px;
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      text-align: center;
+    }
+
+    .loading-state.on { display: flex; }
+
+    .spinner {
+      width: 52px; height: 52px;
+    }
+
+    .spinner svg {
+      width: 52px; height: 52px;
+      animation: spin 1.15s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spin-track { fill: none; stroke: rgba(0, 102, 255, .14); stroke-width: 3.5; }
+    .spin-arc {
+      fill: none;
+      stroke: var(--blue);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 120;
+      stroke-dashoffset: 30;
+      filter: drop-shadow(0 0 5px var(--blue));
+    }
+
+    .loading-txt {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ─── Error state ─────────────────────────────────── */
+    .error-state {
+      display: none;
+      background: var(--fail-bg);
+      border: 1px solid rgba(255, 68, 68, .28);
+      border-radius: var(--r-lg);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+
+    .error-state.on { display: block; }
+
+    .error-state__icon { font-size: 28px; margin-bottom: 12px; }
+
+    .error-state h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--fail);
+      margin-bottom: 8px;
+    }
+
+    .error-state p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ─── Results ─────────────────────────────────────── */
+    #verifyResults {
+      display: none;
+      animation: slideUp .5s ease both;
+    }
+
+    #verifyResults.on { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Status banner */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 24px 28px;
+      border-radius: var(--r-lg);
+      border: 1px solid;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: .06;
+      background: radial-gradient(ellipse at left, currentColor 0%, transparent 70%);
+    }
+
+    .status-banner--ok { border-color: var(--success); color: var(--success); }
+    .status-banner--cond { border-color: var(--gold); color: var(--gold); }
+    .status-banner--no { border-color: var(--fail); color: var(--fail); }
+
+    .status-banner__ico { font-size: 36px; line-height: 1; flex-shrink: 0; }
+
+    .status-banner__body { flex: 1; }
+
+    .status-banner__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 4px;
+    }
+
+    .status-banner__title {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .status-banner__score {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.03em;
+    }
+
+    .status-banner__score-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      opacity: .6;
+    }
+
+    /* Info grid */
+    .info-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .info-card__title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .info-card__title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .info-row {
+      display: contents;
+    }
+
+    .info-key {
+      padding: 11px 0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-val {
+      padding: 11px 0 11px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-val.mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--blue-light);
+    }
+
+    /* Layer scores grid */
+    .layers-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .layer-score-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px 16px;
+      text-align: center;
+      transition: border-color var(--ease), transform var(--ease);
+    }
+
+    .layer-score-card:hover {
+      border-color: rgba(255,255,255,.12);
+      transform: translateY(-2px);
+    }
+
+    .layer-score-card__name {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .layer-score-card__val {
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.02em;
+      margin-bottom: 4px;
+    }
+
+    .layer-score-card__sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .05em;
+    }
+
+    /* Hash card */
+    .hash-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    .hash-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .hash-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      word-break: break-all;
+      letter-spacing: .04em;
+      line-height: 1.7;
+    }
+
+    .verify-url-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .verify-url-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .verify-url-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--blue-light);
+      text-decoration: none;
+      word-break: break-all;
+      transition: color var(--ease);
+    }
+
+    .verify-url-val:hover { color: var(--blue); text-decoration: underline; }
+
+    /* ─── Footer ──────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      padding: 56px 0 0;
+      position: relative;
+      z-index: 1;
+      margin-top: 80px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+      padding-bottom: 48px;
+    }
+
+    .footer-col__title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .footer-col ul li a {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--ease);
+    }
+
+    .footer-col ul li a:hover { color: var(--text); }
+
+    .footer-bar {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .footer-bar p { font-size: 12px; color: rgba(122, 139, 168, .6); }
+
+    @media(max-width:680px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+      .nav-links { display: none; }
+      .search-row { flex-direction: column; }
+      .info-grid { grid-template-columns: 1fr; }
+      .info-val { padding-left: 0; padding-top: 2px; border-bottom: none; }
+      .info-key { border-bottom: none; padding-bottom: 0; }
+      .layers-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media(max-width:400px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .layers-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════
+       NAV
+  ══════════════════════════════════════════════════ -->
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="nav-logo">Model<span>Passport</span></a>
+      <ul class="nav-links">
+        <li><a href="how-it-works.html" id="nav-how">How it Works</a></li>
+        <li><a href="verify.html" class="active" id="nav-verify">Verify</a></li>
+        <li><a href="pricing.html" id="nav-pricing">Pricing</a></li>
+        <li><a href="about.html" id="nav-about">About</a></li>
+        <li><a href="api-docs.html" id="nav-api">API Docs</a></li>
+        <li><a href="index.html" class="nav-cta" id="nav-run-audit">Run Audit</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════════════ -->
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero__pill">
+          <div class="hero__pill-dot"></div>
+          Public Certificate Registry
+        </div>
+        <h1>Verify a <span>Certificate</span></h1>
+        <p class="hero__sub">
+          Enter a ModelPassport certificate ID to instantly verify authenticity and view the full audit results. All certificates are publicly verifiable.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+
+      <!-- Search -->
+      <div class="search-card" id="searchCard">
+        <div class="search-card__lbl">Certificate ID</div>
+        <form class="search-row" id="verifyForm">
+          <input
+            type="text"
+            class="search-input"
+            id="certIdInput"
+            placeholder="MP-2026-000001"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Certificate ID"
+          />
+          <button type="submit" class="btn-verify" id="verifyBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Verify
+          </button>
+        </form>
+      </div>
+
+      <!-- Loading state -->
+      <div class="loading-state" id="loadingState">
+        <div class="spinner">
+          <svg viewBox="0 0 52 52">
+            <circle class="spin-track" cx="26" cy="26" r="22"/>
+            <circle class="spin-arc" cx="26" cy="26" r="22"/>
+          </svg>
+        </div>
+        <div class="loading-txt">Querying ModelPassport registry&hellip;</div>
+      </div>
+
+      <!-- Error state -->
+      <div class="error-state" id="errorState">
+        <div class="error-state__icon">&#10060;</div>
+        <h3>Certificate not found in ModelPassport registry</h3>
+        <p id="errorMsg">The certificate ID you entered does not exist or has not been issued. Please check the ID and try again.</p>
+      </div>
+
+      <!-- Results -->
+      <section id="verifyResults" aria-live="polite">
+
+        <!-- Status banner -->
+        <div class="status-banner" id="statusBanner">
+          <div class="status-banner__ico" id="statusIcon">&#10003;</div>
+          <div class="status-banner__body">
+            <div class="status-banner__label">Certification Status</div>
+            <div class="status-banner__title" id="statusTitle">CERTIFIED</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="status-banner__score" id="overallScore">—</div>
+            <div class="status-banner__score-lbl">Overall Score / 100</div>
+          </div>
+        </div>
+
+        <!-- Model info -->
+        <div class="info-card">
+          <div class="info-card__title">Certificate Details</div>
+          <div class="info-grid">
+            <div class="info-key">Certificate ID</div>
+            <div class="info-val mono" id="resCertId">—</div>
+            <div class="info-key">Model Name</div>
+            <div class="info-val" id="resModelName">—</div>
+            <div class="info-key">Organization</div>
+            <div class="info-val" id="resOrg">—</div>
+            <div class="info-key">Domain</div>
+            <div class="info-val" id="resDomain">—</div>
+            <div class="info-key">Issued Date</div>
+            <div class="info-val" id="resIssued">—</div>
+          </div>
+        </div>
+
+        <!-- Layer scores -->
+        <div class="info-card__title" style="padding:0 0 12px;position:relative;z-index:1;">Layer Audit Scores</div>
+        <div class="layers-grid" id="layersGrid">
+          <div class="layer-score-card">
+            <div class="layer-score-card__name">01 Data Forensics</div>
+            <div class="layer-score-card__val" id="lsForensics">—</div>
+            <div class="layer-score-card__sub">/ 100</div>
+          </div>
+          <div class="layer-score-card">
+            <div class="layer-score-card__name">02 Stress Test</div>
+            <div class="layer-score-card__val" id="lsStress">—</div>
+            <div class="layer-score-card__sub">/ 100</div>
+          </div>
+          <div class="layer-score-card">
+            <div class="layer-score-card__name">03 Fairness Metrics</div>
+            <div class="layer-score-card__val" id="lsFairness">—</div>
+            <div class="layer-score-card__sub">/ 100</div>
+          </div>
+        </div>
+
+        <!-- Hash + verify URL -->
+        <div class="hash-card">
+          <div class="hash-lbl">SHA-256 Certificate Hash</div>
+          <div class="hash-val" id="resHash">—</div>
+          <div class="verify-url-row">
+            <div class="verify-url-lbl">Verify URL</div>
+            <a class="verify-url-val" id="resVerifyUrl" href="#" target="_blank" rel="noopener">—</a>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="how-it-works.html">How it Works</a></li>
+            <li><a href="verify.html">Verify a Certificate</a></li>
+            <li><a href="api-docs.html">API Documentation</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="about.html">About ModelPassport</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="mailto:contact@modelpassport.ai">contact@modelpassport.ai</a></li>
+            <li><a href="https://github.com/Skully232" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    'use strict';
+
+    const API = 'http://127.0.0.1:8080';
+
+    function scoreColor(n) {
+      if (n >= 70) return '#00C48C';
+      if (n >= 50) return '#FFB800';
+      return '#FF4444';
+    }
+
+    function showLoading() {
+      document.getElementById('loadingState').classList.add('on');
+      document.getElementById('errorState').classList.remove('on');
+      document.getElementById('verifyResults').classList.remove('on');
+      document.getElementById('verifyBtn').disabled = true;
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingState').classList.remove('on');
+      document.getElementById('verifyBtn').disabled = false;
+    }
+
+    function showError(msg) {
+      hideLoading();
+      document.getElementById('errorState').classList.add('on');
+      if (msg) document.getElementById('errorMsg').textContent = msg;
+    }
+
+    function populate(d) {
+      hideLoading();
+
+      const st = (d.certification_status || '').toUpperCase();
+      const score = parseFloat(d.overall_score) || 0;
+      const banner = document.getElementById('statusBanner');
+      const icon = document.getElementById('statusIcon');
+      const title = document.getElementById('statusTitle');
+
+      if (st === 'CERTIFIED') {
+        banner.className = 'status-banner status-banner--ok';
+        icon.textContent = '\u2713';
+        title.textContent = 'CERTIFIED';
+      } else if (st.includes('CONDITIONAL')) {
+        banner.className = 'status-banner status-banner--cond';
+        icon.textContent = '\u26A0';
+        title.textContent = 'CONDITIONALLY CERTIFIED';
+      } else {
+        banner.className = 'status-banner status-banner--no';
+        icon.textContent = '\u2717';
+        title.textContent = 'NOT CERTIFIED';
+      }
+
+      const scoreEl = document.getElementById('overallScore');
+      scoreEl.textContent = score.toFixed(2);
+      scoreEl.style.color = scoreColor(score);
+
+      document.getElementById('resCertId').textContent = d.certificate_id || '\u2014';
+      document.getElementById('resModelName').textContent = d.model_name || '\u2014';
+      document.getElementById('resOrg').textContent = d.organization || '\u2014';
+      document.getElementById('resDomain').textContent = d.domain || '\u2014';
+      document.getElementById('resIssued').textContent = d.issued_at
+        ? new Date(d.issued_at).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })
+        : '\u2014';
+
+      // Layer scores
+      const lr = d.layer_results || {};
+      const fs = parseFloat((lr.data_forensics || {}).health_score || 0);
+      const st2 = parseFloat((lr.stress_test || {}).bias_score || 0);
+      const fm = parseFloat((lr.fairness_metrics || {}).overall_fairness_score || 0);
+
+      const fsEl = document.getElementById('lsForensics');
+      fsEl.textContent = fs.toFixed(1);
+      fsEl.style.color = scoreColor(fs);
+
+      const stEl = document.getElementById('lsStress');
+      stEl.textContent = st2.toFixed(1);
+      stEl.style.color = scoreColor(st2);
+
+      const fmEl = document.getElementById('lsFairness');
+      fmEl.textContent = fm.toFixed(1);
+      fmEl.style.color = scoreColor(fm);
+
+      // Hash
+      document.getElementById('resHash').textContent = d.sha256_hash || '\u2014';
+
+      // Verify URL
+      const vurl = d.verify_url || (API + '/verify/' + (d.certificate_id || ''));
+      const vurlEl = document.getElementById('resVerifyUrl');
+      vurlEl.textContent = vurl;
+      vurlEl.href = vurl;
+
+      document.getElementById('verifyResults').classList.add('on');
+      document.getElementById('verifyResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('verifyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const id = document.getElementById('certIdInput').value.trim();
+      if (!id) return;
+
+      showLoading();
+
+      try {
+        const res = await fetch(`${API}/verify/${encodeURIComponent(id)}`);
+        if (res.status === 404) {
+          showError('Certificate "' + id + '" was not found in the ModelPassport registry. Please check the ID and try again.');
+          return;
+        }
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json.detail || json.message || `Server error ${res.status}`);
+        }
+        const data = await res.json();
+        populate(data);
+      } catch (err) {
+        showError(err.message || 'Could not reach the ModelPassport server. Is it running on port 8080?');
+      }
+    });
+
+    // Pre-fill from URL hash e.g. verify.html#MP-2026-000001
+    const hashId = location.hash.slice(1);
+    if (hashId) {
+      document.getElementById('certIdInput').value = decodeURIComponent(hashId);
+      document.getElementById('verifyForm').dispatchEvent(new Event('submit'));
+    }
+  </script>
+
+</body>
+</html>

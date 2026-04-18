@@ -46,14 +46,18 @@
 - [x] Certificate storage verified — certificate_counter.json and certificates_store.json working
 - [x] GET /verify/{certificate_id} endpoint tested and confirmed working
 - [x] Full backend pipeline production-ready and tested end to end
+- [x] All 7 frontend pages built — verify, how-it-works, about, pricing, privacy, terms, api-docs
+- [x] Backend input validation added — protected attributes checked against CSV columns (422 with exact column list)
+- [x] 300 second timeout added to audit pipeline (asyncio.wait_for, returns 504 on timeout)
+- [x] Package `__init__.py` files created — backend, backend/layers, backend/utils
 
 ---
 
 ## In Progress
 
-- [ ] Frontend UI
-- [ ] Sample dataset README documentation
 - [ ] Cloud Run deployment
+- [ ] Demo video
+- [ ] Submission deck
 
 ---
 

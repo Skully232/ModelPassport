@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Documentation — ModelPassport</title>
+  <meta name="description" content="ModelPassport REST API documentation — audit endpoints, verification, health check, and request/response examples." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #0A1628; --navy-light: #0D1F3C; --navy-card: #0F2040;
+      --blue: #0066FF; --blue-glow: rgba(0,102,255,0.22); --blue-soft: rgba(0,102,255,0.08); --blue-light: #3385FF;
+      --gold: #FFB800; --gold-glow: rgba(255,184,0,0.18); --gold-soft: rgba(255,184,0,0.07);
+      --success: #00C48C; --success-bg: rgba(0,196,140,0.08);
+      --fail: #FF4444; --fail-bg: rgba(255,68,68,0.08);
+      --text: #E8EDF5; --text-muted: #7A8BA8; --border: rgba(255,255,255,0.07);
+      --code-bg: #060F1E;
+      --r-sm: 8px; --r: 14px; --r-lg: 20px;
+      --ease: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+    ::selection { background: var(--blue); color: #fff; }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%, rgba(0,102,255,.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255,184,0,.05) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,.013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    /* Nav */
+    .site-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,22,40,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1080px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: relative; z-index: 1; }
+    .nav-logo { font-size: 18px; font-weight: 900; color: var(--gold); text-decoration: none; letter-spacing: -.02em; }
+    .nav-logo span { color: var(--text); opacity: .65; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-light); }
+    .nav-cta { padding: 8px 18px; background: var(--blue); border-radius: var(--r-sm); color: #fff !important; font-weight: 700 !important; }
+    .nav-cta:hover { background: #0052cc !important; }
+
+    /* Layout — two column */
+    .page-wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; display: grid; grid-template-columns: 220px 1fr; gap: 40px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* Hero single col */
+    .hero-wrap { max-width: 1080px; margin: 0 auto; padding: 60px 24px 48px; position: relative; z-index: 1; }
+    .hero__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 12px; }
+    .hero-wrap h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 900; letter-spacing: -.03em; margin-bottom: 12px; }
+
+    .base-url-row {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--code-bg); border: 1px solid rgba(0,102,255,.22);
+      border-radius: var(--r-sm); padding: 10px 16px; margin-top: 12px;
+    }
+    .base-url-lbl { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+    .base-url-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--blue-light); }
+
+    /* Sidebar */
+    .api-sidebar { padding-top: 8px; }
+    .sidebar__section { margin-bottom: 28px; }
+    .sidebar__title { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+    .sidebar__link { display: block; font-size: 13px; color: var(--text-muted); text-decoration: none; padding: 5px 10px; border-radius: var(--r-sm); border-left: 2px solid transparent; transition: color var(--ease), background var(--ease), border-color var(--ease); }
+    .sidebar__link:hover { color: var(--text); background: rgba(255,255,255,.03); }
+    .sidebar__link.active { color: var(--blue-light); border-left-color: var(--blue); background: var(--blue-soft); }
+
+    /* Main content */
+    .api-content { padding: 8px 0 80px; }
+
+    .endpoint-section { margin-bottom: 56px; }
+
+    .endpoint-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .method-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      padding: 4px 10px; border-radius: var(--r-sm);
+    }
+    .method-post { background: rgba(0,196,140,.12); color: var(--success); border: 1px solid rgba(0,196,140,.22); }
+    .method-get { background: var(--blue-soft); color: var(--blue-light); border: 1px solid rgba(0,102,255,.22); }
+
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 17px; font-weight: 700; color: var(--text);
+    }
+
+    .endpoint-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 20px; }
+
+    /* Params table */
+    .params-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+
+    .params-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .params-table th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); padding: 8px 12px; background: rgba(255,255,255,.025); border-bottom: 1px solid var(--border); }
+    .params-table td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .params-table td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--blue-light); font-size: 12px; }
+    .params-table td:nth-child(2) { color: var(--gold); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+    .params-table td:nth-child(3) { color: var(--text-muted); }
+    .params-table td:last-child { font-size: 12px; color: rgba(232,237,245,.6); }
+
+    /* Code block */
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid rgba(0,102,255,.14);
+      border-radius: var(--r);
+      overflow: hidden; margin-bottom: 16px;
+    }
+
+    .code-block__header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(0,102,255,.06);
+      border-bottom: 1px solid rgba(0,102,255,.1);
+    }
+
+    .code-block__lang { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+
+    .code-block__copy {
+      background: none; border: none; cursor: pointer;
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      display: flex; align-items: center; gap: 5px;
+      transition: color var(--ease);
+    }
+
+    .code-block__copy:hover { color: var(--text); }
+
+    .code-block pre {
+      padding: 16px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: rgba(232,237,245,.85);
+      overflow-x: auto;
+      line-height: 1.7;
+      white-space: pre;
+    }
+
+    /* Syntax colors */
+    .c-key { color: #7FDBCA; }
+    .c-str { color: #9ABDDA; }
+    .c-num { color: #FFB800; }
+    .c-kw { color: #A855F7; }
+    .c-cmt { color: #4A5568; font-style: italic; }
+    .c-method { color: var(--success); }
+    .c-url { color: var(--blue-light); }
+
+    /* Response badge */
+    .response-codes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .resp-code { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--r-sm); }
+    .resp-200 { background: var(--success-bg); color: var(--success); border: 1px solid rgba(0,196,140,.22); }
+    .resp-404 { background: var(--fail-bg); color: var(--fail); border: 1px solid rgba(255,68,68,.22); }
+    .resp-422 { background: var(--gold-soft); color: var(--gold); border: 1px solid rgba(255,184,0,.22); }
+    .resp-504 { background: rgba(168,85,247,.1); color: #A855F7; border: 1px solid rgba(168,85,247,.22); }
+
+    /* Auth section */
+    .auth-coming {
+      background: var(--navy-card); border: 1px solid rgba(255,184,0,.16);
+      border-radius: var(--r-lg); padding: 28px;
+    }
+    .auth-coming h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+    .auth-coming p { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+    hr.section-div { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 56px 0 0; position: relative; z-index: 1; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 48px; }
+    .footer-col__title { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 14px; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .footer-col ul li a:hover { color: var(--text); }
+    .footer-bar { border-top: 1px solid var(--border); padding: 20px 0; text-align: center; }
+    .footer-bar p { font-size: 12px; color: rgba(122,139,168,.6); }
+
+    @media(max-width:880px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .api-sidebar { display: none; }
+      .nav-links { display: none; }
+    }
+    @media(max-width:580px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media(max-width:400px) { .footer-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="nav-logo">Model<span>Passport</span></a>
+      <ul class="nav-links">
+        <li><a href="how-it-works.html" id="nav-how">How it Works</a></li>
+        <li><a href="verify.html" id="nav-verify">Verify</a></li>
+        <li><a href="pricing.html" id="nav-pricing">Pricing</a></li>
+        <li><a href="about.html" id="nav-about">About</a></li>
+        <li><a href="api-docs.html" class="active" id="nav-api">API Docs</a></li>
+        <li><a href="index.html" class="nav-cta" id="nav-run-audit">Run Audit</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <div class="hero-wrap">
+      <div class="hero__eyebrow">Developer Reference</div>
+      <h1>API Documentation</h1>
+      <div class="base-url-row">
+        <span class="base-url-lbl">Base URL</span>
+        <span class="base-url-val" id="base-url-display">http://your-deployment-url/</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-wrap">
+
+      <!-- Sidebar -->
+      <aside class="api-sidebar" aria-label="API sections">
+        <div class="sidebar__section">
+          <div class="sidebar__title">Endpoints</div>
+          <a href="#audit-full" class="sidebar__link active" id="sidenav-audit-full">POST /audit/full</a>
+          <a href="#verify" class="sidebar__link" id="sidenav-verify">GET /verify/{id}</a>
+          <a href="#health" class="sidebar__link" id="sidenav-health">GET /health</a>
+        </div>
+        <div class="sidebar__section">
+          <div class="sidebar__title">Other</div>
+          <a href="#auth" class="sidebar__link" id="sidenav-auth">Authentication</a>
+          <a href="#errors" class="sidebar__link" id="sidenav-errors">Error Codes</a>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <div class="api-content">
+
+        <!-- POST /audit/full -->
+        <section class="endpoint-section" id="audit-full">
+          <div class="endpoint-header">
+            <span class="method-badge method-post">POST</span>
+            <span class="endpoint-path">/audit/full</span>
+          </div>
+          <p class="endpoint-desc">Run a full four-layer AI bias audit. Accepts a CSV dataset and optional pre-trained model. Returns a complete certificate with scores, warnings, remediation checklist, and Gemini governance narrative. This is the primary endpoint.</p>
+
+          <div class="params-title">Request Parameters (multipart/form-data)</div>
+          <table class="params-table">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th><th>Required</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>dataset_file</td>
+                <td>file</td>
+                <td>CSV dataset file. Must include all protected attributes and target column.</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>model_file</td>
+                <td>file</td>
+                <td>Joblib-serialized scikit-learn model. If omitted, a RandomForest is trained automatically.</td>
+                <td>No</td>
+              </tr>
+              <tr>
+                <td>model_name</td>
+                <td>string</td>
+                <td>Human-readable name for the model being audited (e.g. "LoanScorer v2.1").</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>organization</td>
+                <td>string</td>
+                <td>Name of the organization submitting the audit (e.g. "Acme Bank").</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>domain</td>
+                <td>string</td>
+                <td>Deployment domain: hiring, loan, healthcare, benefits, or custom string.</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>target_column</td>
+                <td>string</td>
+                <td>Name of the CSV column containing the binary outcome variable.</td>
+                <td>Yes</td>
+              </tr>
+              <tr>
+                <td>protected_attributes</td>
+                <td>string</td>
+                <td>Comma-separated list of column names to audit for fairness (e.g. "race,gender,age").</td>
+                <td>Yes</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="params-title">Example Request (curl)</div>
+          <div class="code-block" id="code-audit-curl">
+            <div class="code-block__header">
+              <span class="code-block__lang">bash</span>
+              <button class="code-block__copy" onclick="copyCode('code-audit-curl')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="code-audit-curl-pre"><span class="c-method">curl</span> -X POST http://your-deployment-url/audit/full \
+  -F <span class="c-str">"dataset_file=@/path/to/adult.csv"</span> \
+  -F <span class="c-str">"model_name=IncomeClassifier v1.0"</span> \
+  -F <span class="c-str">"organization=Research Institute"</span> \
+  -F <span class="c-str">"domain=employment"</span> \
+  -F <span class="c-str">"target_column=income"</span> \
+  -F <span class="c-str">"protected_attributes=race,sex,age"</span></pre>
+          </div>
+
+          <div class="params-title">Example Request (Python)</div>
+          <div class="code-block" id="code-audit-python">
+            <div class="code-block__header">
+              <span class="code-block__lang">python</span>
+              <button class="code-block__copy" onclick="copyCode('code-audit-python')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="code-audit-python-pre"><span class="c-kw">import</span> requests
+
+<span class="c-kw">with</span> <span class="c-kw">open</span>(<span class="c-str">"adult.csv"</span>, <span class="c-str">"rb"</span>) <span class="c-kw">as</span> f:
+    response = requests.post(
+        <span class="c-str">"http://your-deployment-url/audit/full"</span>,
+        data={
+            <span class="c-key">"model_name"</span>:           <span class="c-str">"IncomeClassifier v1.0"</span>,
+            <span class="c-key">"organization"</span>:         <span class="c-str">"Research Institute"</span>,
+            <span class="c-key">"domain"</span>:               <span class="c-str">"employment"</span>,
+            <span class="c-key">"target_column"</span>:        <span class="c-str">"income"</span>,
+            <span class="c-key">"protected_attributes"</span>: <span class="c-str">"race,sex,age"</span>,
+        },
+        files={<span class="c-key">"dataset_file"</span>: f},
+    )
+certificate = response.json()
+<span class="c-kw">print</span>(certificate[<span class="c-str">"certificate_id"</span>])   <span class="c-cmt"># MP-2026-000001</span>
+<span class="c-kw">print</span>(certificate[<span class="c-str">"overall_score"</span>])      <span class="c-cmt"># 57.23</span>
+<span class="c-kw">print</span>(certificate[<span class="c-str">"certification_status"</span>]) <span class="c-cmt"># NOT CERTIFIED</span></pre>
+          </div>
+
+          <div class="params-title">Response Structure (200 OK)</div>
+          <div class="response-codes">
+            <span class="resp-code resp-200">200 OK</span>
+            <span class="resp-code resp-422">422 Invalid Params</span>
+            <span class="resp-code resp-504">504 Timeout</span>
+          </div>
+          <div class="code-block" id="code-audit-response">
+            <div class="code-block__header">
+              <span class="code-block__lang">json</span>
+              <button class="code-block__copy" onclick="copyCode('code-audit-response')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="code-audit-response-pre">{
+  <span class="c-key">"certificate_id"</span>:        <span class="c-str">"MP-2026-000001"</span>,
+  <span class="c-key">"certification_status"</span>:   <span class="c-str">"NOT CERTIFIED"</span>,
+  <span class="c-key">"overall_score"</span>:          <span class="c-num">57.23</span>,
+  <span class="c-key">"model_name"</span>:             <span class="c-str">"IncomeClassifier v1.0"</span>,
+  <span class="c-key">"organization"</span>:           <span class="c-str">"Research Institute"</span>,
+  <span class="c-key">"domain"</span>:                 <span class="c-str">"employment"</span>,
+  <span class="c-key">"issued_at"</span>:              <span class="c-str">"2026-04-18T14:32:00Z"</span>,
+  <span class="c-key">"sha256_hash"</span>:            <span class="c-str">"a3f9b2c1..."</span>,
+  <span class="c-key">"verify_url"</span>:             <span class="c-str">"http://your-url/verify/MP-2026-000001"</span>,
+  <span class="c-key">"narrative"</span>:              <span class="c-str">"The model exhibits significant disparate impact..."</span>,
+  <span class="c-key">"remediation_checklist"</span>: [
+    <span class="c-str">"Re-sample training data to improve minority representation."</span>,
+    <span class="c-str">"Apply fairness constraint during model training."</span>
+  ],
+  <span class="c-key">"layer_results"</span>: {
+    <span class="c-key">"data_forensics"</span>: {
+      <span class="c-key">"health_score"</span>: <span class="c-num">62.5</span>,
+      <span class="c-key">"status"</span>: <span class="c-str">"WARN"</span>,
+      <span class="c-key">"warnings"</span>: [<span class="c-str">"Underrepresentation detected in 'race' column."</span>]
+    },
+    <span class="c-key">"stress_test"</span>: {
+      <span class="c-key">"bias_score"</span>: <span class="c-num">44.1</span>,
+      <span class="c-key">"status"</span>: <span class="c-str">"FAIL"</span>
+    },
+    <span class="c-key">"fairness_metrics"</span>: {
+      <span class="c-key">"overall_fairness_score"</span>: <span class="c-num">58.7</span>,
+      <span class="c-key">"status"</span>: <span class="c-str">"WARN"</span>
+    },
+    <span class="c-key">"gemini_governance"</span>: {
+      <span class="c-key">"gemini_status"</span>: <span class="c-str">"ok"</span>,
+      <span class="c-key">"severity_summary"</span>: {
+        <span class="c-key">"overall_risk_level"</span>: <span class="c-str">"HIGH"</span>,
+        <span class="c-key">"total_critical_warnings"</span>: <span class="c-num">2</span>
+      }
+    }
+  }
+}</pre>
+          </div>
+        </section>
+
+        <hr class="section-div">
+
+        <!-- GET /verify/{id} -->
+        <section class="endpoint-section" id="verify">
+          <div class="endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/verify/{certificate_id}</span>
+          </div>
+          <p class="endpoint-desc">Retrieve and verify a previously issued certificate by its ID. No authentication required — this endpoint is publicly accessible to enable third-party verification.</p>
+
+          <div class="params-title">Path Parameter</div>
+          <table class="params-table">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Description</th><th>Required</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>certificate_id</td>
+                <td>string</td>
+                <td>The certificate ID to verify (e.g. MP-2026-000001). URL-encode if necessary.</td>
+                <td>Yes</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="params-title">Example Request</div>
+          <div class="code-block" id="code-verify-curl">
+            <div class="code-block__header">
+              <span class="code-block__lang">bash</span>
+              <button class="code-block__copy" onclick="copyCode('code-verify-curl')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="code-verify-curl-pre"><span class="c-method">curl</span> http://your-deployment-url/verify/MP-2026-000001</pre>
+          </div>
+
+          <div class="params-title">Response</div>
+          <div class="response-codes">
+            <span class="resp-code resp-200">200 OK — Full certificate object (same structure as /audit/full response)</span>
+            <span class="resp-code resp-404">404 Not Found</span>
+          </div>
+          <div class="code-block" id="code-verify-404">
+            <div class="code-block__header">
+              <span class="code-block__lang">json — 404 Response</span>
+            </div>
+            <pre id="code-verify-404-pre">{
+  <span class="c-key">"detail"</span>: <span class="c-str">"Certificate 'MP-2026-999999' not found."</span>
+}</pre>
+          </div>
+        </section>
+
+        <hr class="section-div">
+
+        <!-- GET /health -->
+        <section class="endpoint-section" id="health">
+          <div class="endpoint-header">
+            <span class="method-badge method-get">GET</span>
+            <span class="endpoint-path">/health</span>
+          </div>
+          <p class="endpoint-desc">Liveness check endpoint. Returns service status and version. Use this to verify the API is running before submitting an audit.</p>
+
+          <div class="params-title">Example Request</div>
+          <div class="code-block" id="code-health">
+            <div class="code-block__header">
+              <span class="code-block__lang">bash</span>
+              <button class="code-block__copy" onclick="copyCode('code-health')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                Copy
+              </button>
+            </div>
+            <pre id="code-health-pre"><span class="c-method">curl</span> http://your-deployment-url/health</pre>
+          </div>
+
+          <div class="params-title">Response (200 OK)</div>
+          <div class="code-block" id="code-health-resp">
+            <div class="code-block__header"><span class="code-block__lang">json</span></div>
+            <pre id="code-health-resp-pre">{
+  <span class="c-key">"status"</span>:  <span class="c-str">"ok"</span>,
+  <span class="c-key">"version"</span>: <span class="c-str">"1.0.0"</span>
+}</pre>
+          </div>
+        </section>
+
+        <hr class="section-div">
+
+        <!-- Auth -->
+        <section class="endpoint-section" id="auth">
+          <h2 style="font-size:18px;font-weight:800;margin-bottom:16px;">Authentication</h2>
+          <div class="auth-coming">
+            <h3>🔑 API Key Authentication — Coming Soon</h3>
+            <p>The current prototype does not require authentication. The public API is rate-limited by IP address. Production authentication via API keys will be added before the full commercial release. The Professional and Enterprise plans will include API key management dashboards.</p>
+            <p style="margin-top:12px;">Currently, the <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);">GET /verify/{id}</code> endpoint will always remain public with no authentication requirement, by design.</p>
+          </div>
+        </section>
+
+        <hr class="section-div">
+
+        <!-- Error codes -->
+        <section class="endpoint-section" id="errors">
+          <h2 style="font-size:18px;font-weight:800;margin-bottom:16px;">Error Codes</h2>
+          <table class="params-table">
+            <thead>
+              <tr><th>Code</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="resp-code resp-422" style="display:inline-block;">422</span></td>
+                <td style="color:var(--text-muted);">Unprocessable Entity — a required field is missing, a protected attribute column was not found in the CSV, or the target column doesn't exist.</td>
+              </tr>
+              <tr>
+                <td><span class="resp-code resp-404" style="display:inline-block;">404</span></td>
+                <td style="color:var(--text-muted);">Not Found — the certificate ID does not exist in the registry.</td>
+              </tr>
+              <tr>
+                <td><span class="resp-code resp-504" style="display:inline-block;">504</span></td>
+                <td style="color:var(--text-muted);">Timeout — audit pipeline exceeded 300 seconds. Try with a smaller dataset or fewer protected attributes.</td>
+              </tr>
+              <tr>
+                <td><span class="resp-code" style="background:rgba(255,255,255,.05);color:var(--text-muted);border:1px solid var(--border);display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--r-sm);">500</span></td>
+                <td style="color:var(--text-muted);">Internal Server Error — unexpected failure. The error message is returned in <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);">detail</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="how-it-works.html">How it Works</a></li>
+            <li><a href="verify.html">Verify a Certificate</a></li>
+            <li><a href="api-docs.html">API Documentation</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="about.html">About ModelPassport</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="mailto:contact@modelpassport.ai">contact@modelpassport.ai</a></li>
+            <li><a href="https://github.com/Skully232" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Highlight active sidebar link on scroll
+    const sections = document.querySelectorAll('.endpoint-section, section[id]');
+    const sidebarLinks = document.querySelectorAll('.sidebar__link');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          sidebarLinks.forEach(l => l.classList.remove('active'));
+          const link = document.querySelector(`.sidebar__link[href="#${entry.target.id}"]`);
+          if (link) link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // Copy code
+    function copyCode(blockId) {
+      const preEl = document.getElementById(blockId + '-pre');
+      if (!preEl) return;
+      const text = preEl.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector(`#${blockId} .code-block__copy`);
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy'; }, 2000); }
+      });
+    }
+  </script>
+
+</body>
+</html>

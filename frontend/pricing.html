@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing — ModelPassport AI Bias Certification</title>
+  <meta name="description" content="Simple, transparent pricing for ModelPassport AI bias certification. Free tier available. Professional and Enterprise plans for teams." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #0A1628; --navy-light: #0D1F3C; --navy-card: #0F2040;
+      --blue: #0066FF; --blue-glow: rgba(0,102,255,0.22); --blue-soft: rgba(0,102,255,0.08); --blue-light: #3385FF;
+      --gold: #FFB800; --gold-glow: rgba(255,184,0,0.18); --gold-soft: rgba(255,184,0,0.07);
+      --success: #00C48C; --success-bg: rgba(0,196,140,0.08);
+      --fail: #FF4444; --fail-bg: rgba(255,68,68,0.08);
+      --text: #E8EDF5; --text-muted: #7A8BA8; --border: rgba(255,255,255,0.07);
+      --r-sm: 8px; --r: 14px; --r-lg: 20px;
+      --ease: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+    ::selection { background: var(--blue); color: #fff; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%, rgba(0,102,255,.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255,184,0,.05) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,.013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    .site-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,22,40,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1080px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: relative; z-index: 1; }
+    .nav-logo { font-size: 18px; font-weight: 900; color: var(--gold); text-decoration: none; letter-spacing: -.02em; }
+    .nav-logo span { color: var(--text); opacity: .65; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-light); }
+    .nav-cta { padding: 8px 18px; background: var(--blue); border-radius: var(--r-sm); color: #fff !important; font-weight: 700 !important; }
+    .nav-cta:hover { background: #0052cc !important; box-shadow: 0 0 20px var(--blue-glow); }
+
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    .hero { padding: 80px 0 64px; text-align: center; }
+    .hero__pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,102,255,.1); border: 1px solid rgba(0,102,255,.28); border-radius: 100px; padding: 6px 16px; font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 24px; }
+    .hero__pill-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light); animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.75); } }
+    .hero h1 { font-size: clamp(32px, 5vw, 54px); font-weight: 900; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 18px; }
+    .hero h1 em { color: var(--gold); font-style: normal; }
+    .hero__sub { font-size: 17px; color: var(--text-muted); max-width: 480px; margin: 0 auto; }
+
+    /* Pricing grid */
+    .pricing-section { padding: 20px 0 80px; }
+
+    .pricing-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: 32px 28px;
+      display: flex; flex-direction: column;
+      position: relative; overflow: hidden;
+      transition: border-color var(--ease), transform var(--ease), box-shadow var(--ease);
+    }
+
+    .pricing-card:hover { border-color: rgba(255,255,255,.12); transform: translateY(-4px); }
+
+    /* Popular card */
+    .pricing-card--popular {
+      border-color: var(--gold);
+      box-shadow: 0 0 48px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    .pricing-card--popular:hover { transform: translateY(-6px); box-shadow: 0 8px 60px var(--gold-glow); }
+
+    .popular-badge {
+      position: absolute; top: 0; right: 0;
+      background: var(--gold); color: #000;
+      font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+      padding: 5px 16px; border-radius: 0 var(--r-lg) 0 var(--r-sm);
+    }
+
+    .pricing-card__tier {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 12px;
+    }
+
+    .pricing-card--popular .pricing-card__tier { color: var(--gold); }
+
+    .price {
+      margin-bottom: 6px;
+    }
+
+    .price__amount {
+      font-size: 36px; font-weight: 900; letter-spacing: -.03em; line-height: 1;
+    }
+
+    .price__free { color: var(--success); }
+
+    .price__period {
+      font-size: 13px; color: var(--text-muted); font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    .pricing-card__desc {
+      font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;
+    }
+
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; flex: 1; margin-bottom: 28px; }
+
+    .feature-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--text-muted); }
+
+    .feature-list li.feature--on { color: var(--text); }
+
+    .feat-ico { flex-shrink: 0; margin-top: 2px; }
+    .feat-ico--on { color: var(--success); }
+    .feat-ico--off { color: rgba(255,255,255,.15); }
+
+    .pricing-btn {
+      width: 100%; padding: 14px; border: none; border-radius: var(--r-sm);
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 800;
+      cursor: pointer; letter-spacing: .02em;
+      transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+    }
+
+    .pricing-btn--free { background: rgba(0,102,255,.12); color: var(--blue-light); border: 1px solid rgba(0,102,255,.22); }
+    .pricing-btn--free:hover { background: var(--blue-soft); border-color: var(--blue); }
+
+    .pricing-btn--popular { background: var(--gold); color: #000; position: relative; overflow: hidden; }
+    .pricing-btn--popular::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,.2) 0%, transparent 55%); }
+    .pricing-btn--popular:hover { background: #ffc527; transform: translateY(-1px); box-shadow: 0 8px 28px var(--gold-glow); }
+
+    .pricing-btn--enterprise { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .pricing-btn--enterprise:hover { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.03); }
+
+    /* FAQ */
+    .faq-section { padding: 60px 0 80px; }
+
+    .faq-section h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 900; letter-spacing: -.02em; text-align: center; margin-bottom: 40px; }
+
+    .faq-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .faq-item {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%; background: none; border: none;
+      padding: 20px 22px; display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; cursor: pointer; text-align: left;
+      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: var(--text);
+      transition: background var(--ease);
+    }
+
+    .faq-q:hover { background: rgba(255,255,255,.025); }
+
+    .faq-chevron {
+      flex-shrink: 0; transition: transform var(--ease);
+      color: var(--text-muted);
+    }
+
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    .faq-a {
+      display: none; padding: 0 22px 20px;
+      font-size: 14px; color: var(--text-muted); line-height: 1.75;
+    }
+
+    .faq-item.open .faq-a { display: block; }
+
+    .divider { height: 1px; background: var(--border); }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 56px 0 0; position: relative; z-index: 1; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 48px; }
+    .footer-col__title { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 14px; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .footer-col ul li a:hover { color: var(--text); }
+    .footer-bar { border-top: 1px solid var(--border); padding: 20px 0; text-align: center; }
+    .footer-bar p { font-size: 12px; color: rgba(122,139,168,.6); }
+
+    @media(max-width:768px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
+      .nav-links { display: none; }
+    }
+
+    @media(max-width:580px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+    }
+
+    @media(max-width:400px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="nav-logo">Model<span>Passport</span></a>
+      <ul class="nav-links">
+        <li><a href="how-it-works.html" id="nav-how">How it Works</a></li>
+        <li><a href="verify.html" id="nav-verify">Verify</a></li>
+        <li><a href="pricing.html" class="active" id="nav-pricing">Pricing</a></li>
+        <li><a href="about.html" id="nav-about">About</a></li>
+        <li><a href="api-docs.html" id="nav-api">API Docs</a></li>
+        <li><a href="index.html" class="nav-cta" id="nav-run-audit">Run Audit</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero__pill">
+          <div class="hero__pill-dot"></div>
+          No Hidden Fees
+        </div>
+        <h1>Simple, <em>Transparent</em> Pricing</h1>
+        <p class="hero__sub">Start free. Scale as your compliance needs grow. All plans include full 4-layer bias audit.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Pricing cards -->
+    <section class="pricing-section">
+      <div class="wrap">
+        <div class="pricing-grid">
+
+          <!-- Free -->
+          <div class="pricing-card" id="plan-free">
+            <div class="pricing-card__tier">Free</div>
+            <div class="price">
+              <span class="price__amount price__free">₹0</span>
+            </div>
+            <div class="price__period">Forever free</div>
+            <div class="pricing-card__desc">For individual researchers, students, and teams evaluating ModelPassport.</div>
+            <ul class="feature-list">
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                3 full audits per month
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                All 4 audit layers included
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Basic PDF report
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Public certificate verification
+              </li>
+              <li>
+                <svg class="feat-ico feat-ico--off" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Watermarked certificate
+              </li>
+              <li>
+                <svg class="feat-ico feat-ico--off" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                API access
+              </li>
+              <li>
+                <svg class="feat-ico feat-ico--off" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Priority support
+              </li>
+            </ul>
+            <button class="pricing-btn pricing-btn--free" id="btn-free" onclick="window.location.href='index.html'">Get Started</button>
+          </div>
+
+          <!-- Professional — MOST POPULAR -->
+          <div class="pricing-card pricing-card--popular" id="plan-professional">
+            <div class="popular-badge">Most Popular</div>
+            <div class="pricing-card__tier">Professional</div>
+            <div class="price">
+              <span class="price__amount" style="color:var(--gold);">₹80,000</span>
+            </div>
+            <div class="price__period">/ month + GST</div>
+            <div class="pricing-card__desc">For compliance teams, AI product companies, and regulated industries that need unlimited audits.</div>
+            <ul class="feature-list">
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <strong>Unlimited</strong>&nbsp;audits per month
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                All 4 audit layers included
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Full branded PDF certificates
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                REST API access
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Priority support (24h SLA)
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Audit history dashboard
+              </li>
+              <li>
+                <svg class="feat-ico feat-ico--off" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                On-premise deployment
+              </li>
+            </ul>
+            <button class="pricing-btn pricing-btn--popular" id="btn-professional" onclick="window.location.href='mailto:contact@modelpassport.ai?subject=Professional Plan Inquiry'">Contact Us</button>
+          </div>
+
+          <!-- Enterprise -->
+          <div class="pricing-card" id="plan-enterprise">
+            <div class="pricing-card__tier">Enterprise</div>
+            <div class="price">
+              <span class="price__amount">₹2,00,000<span style="font-size:20px;font-weight:600;">+</span></span>
+            </div>
+            <div class="price__period">/ month, custom contract</div>
+            <div class="pricing-card__desc">For government ministries, large banks, and enterprises with custom compliance requirements.</div>
+            <ul class="feature-list">
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Everything in Professional
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Custom system integration
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Regulatory compliance reports
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                On-premise deployment option
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Dedicated support engineer
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                SLA with uptime guarantees
+              </li>
+              <li class="feature--on">
+                <svg class="feat-ico feat-ico--on" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Custom audit criteria
+              </li>
+            </ul>
+            <button class="pricing-btn pricing-btn--enterprise" id="btn-enterprise" onclick="window.location.href='mailto:contact@modelpassport.ai?subject=Enterprise Plan Inquiry'">Contact Sales</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <div class="divider"></div>
+    <section class="faq-section">
+      <div class="wrap">
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-list" id="faqList">
+
+          <div class="faq-item" id="faq-1">
+            <button class="faq-q" onclick="toggleFaq('faq-1')">
+              What types of models can I audit?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              ModelPassport supports any scikit-learn compatible classification model — logistic regression, random forests, gradient boosting, SVMs, and more. You can upload a pre-trained model as a joblib file, or simply upload your dataset and we'll train a RandomForest baseline for you. The audit focuses on the model's outputs, not its architecture, so most binary and multiclass classifiers are supported.
+            </div>
+          </div>
+
+          <div class="faq-item" id="faq-2">
+            <button class="faq-q" onclick="toggleFaq('faq-2')">
+              Is my data safe? Where does it go?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              Your privacy is our top priority. Datasets and model files are processed in memory and deleted immediately after the audit completes — we never store your training data or model weights. Audit results (scores, certificate metadata) are retained and associated with your certificate ID. All API communication is encrypted in transit. See our <a href="privacy.html" style="color:var(--blue-light);">Privacy Policy</a> for full details.
+            </div>
+          </div>
+
+          <div class="faq-item" id="faq-3">
+            <button class="faq-q" onclick="toggleFaq('faq-3')">
+              Do certificates expire?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              Certificates do not expire, but they are point-in-time assessments. A certificate reflects the fairness of your model on the data provided at audit time. We strongly recommend re-auditing whenever you retrain your model, update your training data, or deploy in a new context. The EU AI Act and most compliance frameworks expect ongoing monitoring, not one-time certification.
+            </div>
+          </div>
+
+          <div class="faq-item" id="faq-4">
+            <button class="faq-q" onclick="toggleFaq('faq-4')">
+              What regulations does ModelPassport help with?
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              ModelPassport's audit methodology is aligned with: <strong>EU AI Act</strong> (high-risk system fairness requirements, Article 10 data governance), <strong>US EEOC 80% / Four-Fifths Rule</strong> (disparate impact in employment decisions), <strong>India DPDP Act 2023</strong> (data processing fairness), and the <strong>IEEE Ethically Aligned Design</strong> framework. Our Gemini Governance layer explicitly maps findings to regulatory requirements and produces compliance-ready language.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="how-it-works.html">How it Works</a></li>
+            <li><a href="verify.html">Verify a Certificate</a></li>
+            <li><a href="api-docs.html">API Documentation</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="about.html">About ModelPassport</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="mailto:contact@modelpassport.ai">contact@modelpassport.ai</a></li>
+            <li><a href="https://github.com/Skully232" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleFaq(id) {
+      const item = document.getElementById(id);
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+  </script>
+
+</body>
+</html>

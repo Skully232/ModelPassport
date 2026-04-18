@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — ModelPassport</title>
+  <meta name="description" content="ModelPassport Privacy Policy — how we collect, use, and protect your data. Datasets uploaded for audit are deleted immediately after processing." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy: #0A1628; --navy-light: #0D1F3C; --navy-card: #0F2040;
+      --blue: #0066FF; --blue-glow: rgba(0,102,255,0.22); --blue-soft: rgba(0,102,255,0.08); --blue-light: #3385FF;
+      --gold: #FFB800; --gold-glow: rgba(255,184,0,0.18); --gold-soft: rgba(255,184,0,0.07);
+      --success: #00C48C; --success-bg: rgba(0,196,140,0.08);
+      --fail: #FF4444; --fail-bg: rgba(255,68,68,0.08);
+      --text: #E8EDF5; --text-muted: #7A8BA8; --border: rgba(255,255,255,0.07);
+      --r-sm: 8px; --r: 14px; --r-lg: 20px;
+      --ease: 0.25s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; overflow-x: hidden; line-height: 1.6; }
+    ::selection { background: var(--blue); color: #fff; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% 5%, rgba(0,102,255,.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 90%, rgba(255,184,0,.05) 0%, transparent 60%),
+        linear-gradient(rgba(255,255,255,.013) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.013) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 56px 56px, 56px 56px;
+    }
+
+    .site-nav { position: sticky; top: 0; z-index: 100; background: rgba(10,22,40,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .nav-inner { max-width: 1080px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: relative; z-index: 1; }
+    .nav-logo { font-size: 18px; font-weight: 900; color: var(--gold); text-decoration: none; letter-spacing: -.02em; }
+    .nav-logo span { color: var(--text); opacity: .65; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { padding: 8px 18px; background: var(--blue); border-radius: var(--r-sm); color: #fff !important; font-weight: 700 !important; }
+    .nav-cta:hover { background: #0052cc !important; }
+
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .wrap--lg { max-width: 1080px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* Page header */
+    .page-header { padding: 60px 0 48px; }
+    .page-header__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue-light); margin-bottom: 12px; }
+    .page-header h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 900; letter-spacing: -.03em; margin-bottom: 12px; }
+    .page-header__meta { font-size: 13px; color: var(--text-muted); }
+
+    /* Key commitment banner */
+    .commitment-banner {
+      background: var(--success-bg); border: 1px solid rgba(0,196,140,.22);
+      border-radius: var(--r-lg); padding: 20px 24px;
+      display: flex; align-items: flex-start; gap: 14px; margin-bottom: 40px;
+    }
+
+    .commitment-banner__ico { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .commitment-banner p { font-size: 14px; color: var(--success); font-weight: 500; line-height: 1.65; }
+    .commitment-banner strong { font-weight: 800; }
+
+    /* Content */
+    .doc-content { padding-bottom: 80px; }
+
+    .doc-section { margin-bottom: 48px; }
+
+    .doc-section h2 {
+      font-size: 18px; font-weight: 800; letter-spacing: -.01em;
+      margin-bottom: 16px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .doc-section h2 .doc-h-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--blue-soft); color: var(--blue-light);
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .doc-section p { font-size: 15px; color: rgba(232,237,245,.75); line-height: 1.8; margin-bottom: 12px; }
+    .doc-section p:last-child { margin-bottom: 0; }
+
+    .doc-section ul { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .doc-section ul li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; color: rgba(232,237,245,.75); line-height: 1.7; }
+    .doc-section ul li::before { content: '→'; color: var(--blue-light); flex-shrink: 0; font-size: 13px; margin-top: 3px; }
+
+    .highlight-box {
+      background: var(--navy-card); border: 1px solid rgba(255,184,0,.16);
+      border-radius: var(--r); padding: 18px 20px; margin: 16px 0;
+    }
+
+    .highlight-box p { font-size: 14px; color: var(--gold); font-weight: 600; margin: 0; }
+
+    a.inline-link { color: var(--blue-light); text-decoration: underline; text-underline-offset: 2px; }
+    a.inline-link:hover { color: var(--blue); }
+
+    .divider { height: 1px; background: var(--border); }
+
+    /* Footer */
+    .site-footer { border-top: 1px solid var(--border); padding: 56px 0 0; position: relative; z-index: 1; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; padding-bottom: 48px; }
+    .footer-col__title { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 14px; color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    .footer-col ul li a:hover { color: var(--text); }
+    .footer-bar { border-top: 1px solid var(--border); padding: 20px 0; text-align: center; }
+    .footer-bar p { font-size: 12px; color: rgba(122,139,168,.6); }
+
+    @media(max-width:580px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+      .nav-links { display: none; }
+    }
+    @media(max-width:400px) { .footer-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo" id="nav-logo">Model<span>Passport</span></a>
+      <ul class="nav-links">
+        <li><a href="how-it-works.html" id="nav-how">How it Works</a></li>
+        <li><a href="verify.html" id="nav-verify">Verify</a></li>
+        <li><a href="pricing.html" id="nav-pricing">Pricing</a></li>
+        <li><a href="about.html" id="nav-about">About</a></li>
+        <li><a href="api-docs.html" id="nav-api">API Docs</a></li>
+        <li><a href="index.html" class="nav-cta" id="nav-run-audit">Run Audit</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header>
+    <div class="wrap">
+      <div class="page-header">
+        <div class="page-header__eyebrow">Legal</div>
+        <h1>Privacy Policy</h1>
+        <div class="page-header__meta">Last updated: April 2026 &nbsp;·&nbsp; Effective: April 2026</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="commitment-banner">
+        <div class="commitment-banner__ico">🛡️</div>
+        <p><strong>Our core commitment:</strong> Datasets and model files you upload for audit are processed entirely in memory and deleted immediately after the audit completes. We never store, analyze, or share your training data. Your model's intellectual property remains yours.</p>
+      </div>
+
+      <div class="doc-content">
+
+        <section class="doc-section" id="section-collect">
+          <h2><span class="doc-h-num">1</span> Data We Collect</h2>
+          <p>ModelPassport collects the minimum data necessary to provide the audit service. We do not sell data to third parties, ever.</p>
+          <ul>
+            <li><strong>Audit inputs (transient):</strong> CSV dataset files and optional joblib model files you upload are held in server memory for the duration of the audit only. They are never written to persistent storage.</li>
+            <li><strong>Audit parameters:</strong> Model name, organization name, deployment domain, target column name, and protected attribute column names are stored as part of the certificate record.</li>
+            <li><strong>Certificate data:</strong> Audit scores, layer results, certificate ID, SHA-256 hash, and issued timestamp are stored permanently in the certificate registry to enable public verification.</li>
+            <li><strong>Usage logs:</strong> Server access logs (IP address, timestamp, endpoint, response code) are retained for 30 days for security monitoring. No user-identifying data is linked to these logs.</li>
+            <li><strong>Contact data:</strong> If you contact us via email, we retain your email address and message content to respond to your inquiry.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="section-use">
+          <h2><span class="doc-h-num">2</span> How We Use It</h2>
+          <ul>
+            <li>To execute the four-layer bias audit pipeline and generate your certificate.</li>
+            <li>To store and serve your certificate for public verification purposes.</li>
+            <li>To monitor API usage, detect abuse, and maintain service reliability.</li>
+            <li>To respond to support inquiries and bug reports you submit.</li>
+            <li>We do <strong>not</strong> use your data to train AI models, for advertising, or for any purpose other than providing the ModelPassport service.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="section-retention">
+          <h2><span class="doc-h-num">3</span> Data Retention</h2>
+          <div class="highlight-box">
+            <p>🔒 Datasets and model files uploaded for audit are deleted from server memory immediately after the audit pipeline completes. We never store training data on disk.</p>
+          </div>
+          <ul>
+            <li><strong>Uploaded files:</strong> Deleted from memory immediately after audit completion.</li>
+            <li><strong>Certificate metadata:</strong> Retained indefinitely — this enables public verification, which is a core feature of the service.</li>
+            <li><strong>Server logs:</strong> Retained for 30 days, then automatically purged.</li>
+            <li><strong>Email correspondence:</strong> Retained for the duration of the support interaction plus 90 days.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="section-security">
+          <h2><span class="doc-h-num">4</span> Security Measures</h2>
+          <ul>
+            <li>All API communication is encrypted in transit via TLS 1.3.</li>
+            <li>Audit files are processed in isolated server memory — no disk writes occur for uploaded files.</li>
+            <li>Certificate data is integrity-protected with SHA-256 hashing.</li>
+            <li>The API does not require authentication for read operations (public certificate verification); write operations (audits) are rate-limited per IP.</li>
+            <li>Infrastructure is hosted on Google Cloud Run — a managed, serverless environment with automatic security patching.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="section-third-party">
+          <h2><span class="doc-h-num">5</span> Third-Party Services</h2>
+          <p>ModelPassport uses the following third-party services in the course of providing the audit:</p>
+          <ul>
+            <li><strong>Google Gemini AI API:</strong> The Gemini governance layer sends combined audit result data (scores and metrics — not your raw uploaded data) to Google's Gemini API to generate the plain-language governance narrative. This data is governed by Google's API Terms of Service and Privacy Policy.</li>
+            <li><strong>Google Cloud Run:</strong> Our API is hosted on Cloud Run. No user data is shared with Google beyond what is inherent in using their infrastructure (standard server logs).</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="section-rights">
+          <h2><span class="doc-h-num">6</span> Your Rights</h2>
+          <ul>
+            <li>You may request deletion of a certificate from the public registry by contacting us with proof that you are the certificate holder.</li>
+            <li>You may request a copy of all data we hold associated with your audits.</li>
+            <li>You may opt out of server logging by using the API anonymously (no login required).</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="section-contact">
+          <h2><span class="doc-h-num">7</span> Contact</h2>
+          <p>For privacy-related questions, data deletion requests, or to exercise your rights, contact us at:</p>
+          <p><a href="mailto:contact@modelpassport.ai" class="inline-link">contact@modelpassport.ai</a></p>
+          <p>We aim to respond to all privacy inquiries within 5 business days.</p>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap--lg">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-col__title">Product</div>
+          <ul>
+            <li><a href="how-it-works.html">How it Works</a></li>
+            <li><a href="verify.html">Verify a Certificate</a></li>
+            <li><a href="api-docs.html">API Documentation</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Company</div>
+          <ul>
+            <li><a href="about.html">About ModelPassport</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms of Service</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Compliance Standards</div>
+          <ul>
+            <li><a href="#">EU AI Act</a></li>
+            <li><a href="#">EEOC 80% Rule</a></li>
+            <li><a href="#">India DPDP Act</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col__title">Contact</div>
+          <ul>
+            <li><a href="mailto:contact@modelpassport.ai">contact@modelpassport.ai</a></li>
+            <li><a href="https://github.com/Skully232" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="#">Report an Issue</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="wrap--lg">
+        <p>&copy; 2026 ModelPassport. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

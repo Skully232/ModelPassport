@@ -17,6 +17,7 @@ POST /audit/fairness
 POST /audit/report
 """
 
+import asyncio
 import io
 import logging
 import uuid
@@ -192,124 +193,130 @@ async def audit_full(
                        f"Available columns: {list(df_raw.columns)}",
             )
 
-        missing_attrs = [a for a in attrs if a not in df_raw.columns]
-        if missing_attrs:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Protected attributes not found in CSV: {missing_attrs}",
-            )
+        for attr in attrs:
+            if attr not in df_raw.columns:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Protected attribute '{attr}' not found in dataset columns: {list(df_raw.columns)}",
+                )
 
-        # ── 2. Load or train model ───────────────────────────────────────────
-        logger.info("Step 2: preparing model…")
-        # Encode the full dataframe for model operations
-        df_encoded, _ = _encode_dataframe(df_raw)
+        # ── 2-8: Run the entire pipeline under a timeout ────────────────────
+        async def _run_pipeline():
+            # ── 2. Load or train model ───────────────────────────────────────
+            logger.info("Step 2: preparing model…")
+            df_encoded, _ = _encode_dataframe(df_raw)
 
-        y_full = df_encoded[target_column]
-        X_full = df_encoded.drop(columns=[target_column])
+            y_full = df_encoded[target_column]
+            X_full = df_encoded.drop(columns=[target_column])
 
-        if model_file is not None:
-            logger.info("Loading provided model from uploaded file…")
-            model_bytes = await model_file.read()
-            model = joblib.load(io.BytesIO(model_bytes))
-            logger.info("Model loaded: %s", type(model).__name__)
-        else:
-            logger.info("No model provided — training fallback RandomForestClassifier…")
-            X_train_fb, _, y_train_fb, _ = train_test_split(
+            if model_file is not None:
+                logger.info("Loading provided model from uploaded file…")
+                model_bytes = await model_file.read()
+                model = joblib.load(io.BytesIO(model_bytes))
+                logger.info("Model loaded: %s", type(model).__name__)
+            else:
+                logger.info("No model provided — training fallback RandomForestClassifier…")
+                X_train_fb, _, y_train_fb, _ = train_test_split(
+                    X_full, y_full, test_size=0.2, random_state=42
+                )
+                model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+                model.fit(X_train_fb, y_train_fb)
+                logger.info("Fallback RandomForest trained on %d samples.", len(X_train_fb))
+
+            # ── 3. Train/test split (encoded) ────────────────────────────────
+            logger.info("Step 3: creating 80/20 train/test split…")
+            X_train, X_test, y_train, y_test = train_test_split(
                 X_full, y_full, test_size=0.2, random_state=42
             )
-            model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
-            model.fit(X_train_fb, y_train_fb)
-            logger.info("Fallback RandomForest trained on %d samples.", len(X_train_fb))
 
-        # ── 3. Train/test split (encoded) ────────────────────────────────────
-        logger.info("Step 3: creating 80/20 train/test split…")
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_full, y_full, test_size=0.2, random_state=42
-        )
+            df_test_encoded = X_test.copy()
+            df_test_encoded[target_column] = y_test.values
 
-        # Reconstruct test split DataFrame with target column for FairnessMetricsEngine
-        df_test_encoded = X_test.copy()
-        df_test_encoded[target_column] = y_test.values
+            # ── 4. Layer 1 — Data Forensics ──────────────────────────────────
+            logger.info("Step 4: running DataForensicsEngine…")
+            df_layer = DataForensicsEngine(
+                df=df_raw,
+                protected_attributes=attrs,
+                target_column=target_column,
+            )
+            forensics_result = df_layer.run()
+            logger.info(
+                "Data Forensics complete — health_score=%s, status=%s",
+                forensics_result.get("health_score"), forensics_result.get("status"),
+            )
 
-        # ── 4. Layer 1 — Data Forensics ──────────────────────────────────────
-        logger.info("Step 4: running DataForensicsEngine…")
-        df_layer = DataForensicsEngine(
-            df=df_raw,                      # raw frame — engine handles its own types
-            protected_attributes=attrs,
-            target_column=target_column,
-        )
-        forensics_result = df_layer.run()
-        logger.info(
-            "Data Forensics complete — health_score=%s, status=%s",
-            forensics_result.get("health_score"), forensics_result.get("status"),
-        )
+            # ── 5. Layer 2 — Stress Test ─────────────────────────────────────
+            logger.info("Step 5: running StressTestEngine…")
+            stress_engine = StressTestEngine(
+                model=model,
+                dataset=df_encoded,
+                protected_attributes=attrs,
+                target_column=target_column,
+            )
+            stress_result = stress_engine.run(num_samples=500)
+            stress_result["bias_score"] = _derive_bias_score(stress_result)
+            logger.info(
+                "Stress Test complete — bias_score=%s, status=%s",
+                stress_result.get("bias_score"), stress_result.get("status"),
+            )
 
-        # ── 5. Layer 2 — Stress Test ─────────────────────────────────────────
-        logger.info("Step 5: running StressTestEngine…")
-        # StressTestEngine drops target internally when target_column is passed.
-        # We pass the ENCODED full dataframe so model.predict() works correctly.
-        stress_engine = StressTestEngine(
-            model=model,
-            dataset=df_encoded,             # encoded; engine drops target internally
-            protected_attributes=attrs,
-            target_column=target_column,
-        )
-        stress_result = stress_engine.run(num_samples=500)
+            # ── 6. Layer 3 — Fairness Metrics ────────────────────────────────
+            logger.info("Step 6: running FairnessMetricsEngine…")
+            fairness_engine = FairnessMetricsEngine(
+                model=model,
+                dataset=df_test_encoded,
+                protected_attributes=attrs,
+                target_column=target_column,
+            )
+            fairness_result = fairness_engine.run()
+            logger.info(
+                "Fairness Metrics complete — overall_fairness_score=%s, status=%s",
+                fairness_result.get("overall_fairness_score"), fairness_result.get("status"),
+            )
 
-        # Inject derived bias_score so CertificateGenerator can score this layer
-        stress_result["bias_score"] = _derive_bias_score(stress_result)
-        logger.info(
-            "Stress Test complete — bias_score=%s, status=%s",
-            stress_result.get("bias_score"), stress_result.get("status"),
-        )
+            # ── 7. Layer 4 — Gemini Governance ───────────────────────────────
+            logger.info("Step 7: running GeminiGovernanceEngine…")
+            combined_for_gemini = {
+                "data_forensics": forensics_result,
+                "stress_test": stress_result,
+                "fairness_metrics": fairness_result,
+            }
+            gemini_engine = GeminiGovernanceEngine()
+            governance_result = gemini_engine.run(combined_for_gemini)
+            logger.info(
+                "Gemini Governance complete — risk=%s, gemini_status=%s",
+                governance_result.get("severity_summary", {}).get("overall_risk_level"),
+                governance_result.get("gemini_status"),
+            )
 
-        # ── 6. Layer 3 — Fairness Metrics ────────────────────────────────────
-        logger.info("Step 6: running FairnessMetricsEngine…")
-        fairness_engine = FairnessMetricsEngine(
-            model=model,
-            dataset=df_test_encoded,        # encoded test split WITH target column
-            protected_attributes=attrs,
-            target_column=target_column,
-        )
-        fairness_result = fairness_engine.run()
-        logger.info(
-            "Fairness Metrics complete — overall_fairness_score=%s, status=%s",
-            fairness_result.get("overall_fairness_score"), fairness_result.get("status"),
-        )
+            # ── 8. Generate Certificate ───────────────────────────────────────
+            logger.info("Step 8: generating certificate…")
+            generator = CertificateGenerator()
+            certificate = generator.generate(
+                model_name=model_name,
+                organization=organization,
+                domain=domain,
+                data_forensics=forensics_result,
+                stress_test=stress_result,
+                fairness_metrics=fairness_result,
+                gemini_governance=governance_result,
+            )
+            logger.info(
+                "Certificate issued — id=%s, score=%s, status=%s",
+                certificate.get("certificate_id"),
+                certificate.get("overall_score"),
+                certificate.get("certification_status"),
+            )
+            return certificate
 
-        # ── 7. Layer 4 — Gemini Governance ───────────────────────────────────
-        logger.info("Step 7: running GeminiGovernanceEngine…")
-        combined_for_gemini = {
-            "data_forensics": forensics_result,
-            "stress_test": stress_result,
-            "fairness_metrics": fairness_result,
-        }
-        gemini_engine = GeminiGovernanceEngine()
-        governance_result = gemini_engine.run(combined_for_gemini)
-        logger.info(
-            "Gemini Governance complete — risk=%s, gemini_status=%s",
-            governance_result.get("severity_summary", {}).get("overall_risk_level"),
-            governance_result.get("gemini_status"),
-        )
-
-        # ── 8. Generate Certificate ───────────────────────────────────────────
-        logger.info("Step 8: generating certificate…")
-        generator = CertificateGenerator()
-        certificate = generator.generate(
-            model_name=model_name,
-            organization=organization,
-            domain=domain,
-            data_forensics=forensics_result,
-            stress_test=stress_result,
-            fairness_metrics=fairness_result,
-            gemini_governance=governance_result,
-        )
-        logger.info(
-            "Certificate issued — id=%s, score=%s, status=%s",
-            certificate.get("certificate_id"),
-            certificate.get("overall_score"),
-            certificate.get("certification_status"),
-        )
+        try:
+            certificate = await asyncio.wait_for(_run_pipeline(), timeout=300)
+        except asyncio.TimeoutError:
+            logger.error("audit/full pipeline timed out after 300 seconds.")
+            raise HTTPException(
+                status_code=504,
+                detail="Audit timed out after 300 seconds. Try a smaller dataset.",
+            )
 
         return certificate
 
