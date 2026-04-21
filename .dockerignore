@@ -1,0 +1,13 @@
+.env
+.env.example
+__pycache__
+*.pyc
+*.pyo
+venv/
+.git/
+.gitignore
+*.pkl
+certificates_store.json
+certificate_counter.json
+sample_data/
+frontend/

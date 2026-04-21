@@ -55,7 +55,8 @@
 
 ## In Progress
 
-- [ ] Cloud Run deployment
+- [ ] Google Cloud Run deployment in progress
+- [ ] Need to set GEMINI_API_KEY as Cloud Run secret
 - [ ] Demo video
 - [ ] Submission deck
 
