@@ -215,7 +215,7 @@
       <h1>API Documentation</h1>
       <div class="base-url-row">
         <span class="base-url-lbl">Base URL</span>
-        <span class="base-url-val" id="base-url-display">http://your-deployment-url/</span>
+        <span class="base-url-val" id="base-url-display">https://modelpassport-666743556492.asia-south1.run.app</span>
       </div>
     </div>
   </header>
@@ -309,7 +309,7 @@
                 Copy
               </button>
             </div>
-            <pre id="code-audit-curl-pre"><span class="c-method">curl</span> -X POST http://your-deployment-url/audit/full \
+            <pre id="code-audit-curl-pre"><span class="c-method">curl</span> -X POST https://modelpassport-666743556492.asia-south1.run.app/audit/full \
   -F <span class="c-str">"dataset_file=@/path/to/adult.csv"</span> \
   -F <span class="c-str">"model_name=IncomeClassifier v1.0"</span> \
   -F <span class="c-str">"organization=Research Institute"</span> \
@@ -331,7 +331,7 @@
 
 <span class="c-kw">with</span> <span class="c-kw">open</span>(<span class="c-str">"adult.csv"</span>, <span class="c-str">"rb"</span>) <span class="c-kw">as</span> f:
     response = requests.post(
-        <span class="c-str">"http://your-deployment-url/audit/full"</span>,
+        <span class="c-str">"https://modelpassport-666743556492.asia-south1.run.app/audit/full"</span>,
         data={
             <span class="c-key">"model_name"</span>:           <span class="c-str">"IncomeClassifier v1.0"</span>,
             <span class="c-key">"organization"</span>:         <span class="c-str">"Research Institute"</span>,
@@ -370,7 +370,7 @@ certificate = response.json()
   <span class="c-key">"domain"</span>:                 <span class="c-str">"employment"</span>,
   <span class="c-key">"issued_at"</span>:              <span class="c-str">"2026-04-18T14:32:00Z"</span>,
   <span class="c-key">"sha256_hash"</span>:            <span class="c-str">"a3f9b2c1..."</span>,
-  <span class="c-key">"verify_url"</span>:             <span class="c-str">"http://your-url/verify/MP-2026-000001"</span>,
+  <span class="c-key">"verify_url"</span>:             <span class="c-str">"https://modelpassport-666743556492.asia-south1.run.app/verify/MP-2026-000001"</span>,
   <span class="c-key">"narrative"</span>:              <span class="c-str">"The model exhibits significant disparate impact..."</span>,
   <span class="c-key">"remediation_checklist"</span>: [
     <span class="c-str">"Re-sample training data to improve minority representation."</span>,
@@ -436,7 +436,7 @@ certificate = response.json()
                 Copy
               </button>
             </div>
-            <pre id="code-verify-curl-pre"><span class="c-method">curl</span> http://your-deployment-url/verify/MP-2026-000001</pre>
+            <pre id="code-verify-curl-pre"><span class="c-method">curl</span> https://modelpassport-666743556492.asia-south1.run.app/verify/MP-2026-000001</pre>
           </div>
 
           <div class="params-title">Response</div>
@@ -473,7 +473,7 @@ certificate = response.json()
                 Copy
               </button>
             </div>
-            <pre id="code-health-pre"><span class="c-method">curl</span> http://your-deployment-url/health</pre>
+            <pre id="code-health-pre"><span class="c-method">curl</span> https://modelpassport-666743556492.asia-south1.run.app/health</pre>
           </div>
 
           <div class="params-title">Response (200 OK)</div>

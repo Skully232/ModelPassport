@@ -833,7 +833,9 @@
   <script>
     'use strict';
 
-    const API = 'http://127.0.0.1:8080';
+    const API = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+      ? 'http://127.0.0.1:8080'
+      : 'https://modelpassport-666743556492.asia-south1.run.app';
 
     function scoreColor(n) {
       if (n >= 70) return '#00C48C';
