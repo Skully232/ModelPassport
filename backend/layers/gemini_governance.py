@@ -301,7 +301,7 @@ class GeminiGovernanceEngine:
     def __init__(
         self,
         api_key: str | None = None,
-        model_name: str = "gemini-2.0-flash",
+        model_name: str = "gemini-2.5-flash",
         temperature: float = 0.4,
     ) -> None:
         from dotenv import load_dotenv
