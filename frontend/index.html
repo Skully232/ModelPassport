@@ -1861,7 +1861,7 @@
       if (!_lastCert) return;
       const d = _lastCert;
       const st = (d.certification_status || '').toUpperCase();
-      const scr = parseFloat(d.overall_score || 0).toFixed(2);
+      const scr = parseFloat(d.overall_score || 0).toFixed(1);
       const hsh = (d.sha256_hash || '').slice(0, 16) + '...';
       const vurl = d.verify_url || (API + '/verify/' + (d.certificate_id || ''));
       const dt = d.issued_at
